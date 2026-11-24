@@ -1,162 +1,161 @@
 /**
- * CarCatalog.js - Vehicle definitions, performance statistics, unlock conditions and styling
+ * CarCatalog.js - Iconic Need for Speed Tuner & Supercar Legends
  */
 
 export const CAR_TIERS = {
-  STARTER: 'Starter',
-  SPORTS: 'Sports',
-  RARE: 'Rare',
-  SUPERCAR: 'Supercar',
-  LEGENDARY: 'Legendary'
+  TUNER: 'Street Tuner',
+  MUSCLE: 'Muscle',
+  EXOTIC: 'Exotic Supercar',
+  HERO: 'Most Wanted Legend'
 };
 
 export const CARS = [
   {
-    id: 'viper_gtr',
-    name: 'Viper GT-R',
-    tier: CAR_TIERS.STARTER,
-    description: 'A finely balanced street machine with forgiving handling. Perfect for amateur championship racers.',
+    id: 'nissan_skyline',
+    name: 'Nissan Skyline GT-R R34',
+    tier: CAR_TIERS.TUNER,
+    description: 'The underground king. Twin-turbo RB26DETT with ATTESA all-wheel-drive grip and aggressive aero.',
     unlockedByDefault: true,
     unlockRequirement: 'Unlocked by default',
-    color: '#e63946', // Racing Red
-    secondaryColor: '#1d3557', // Carbon dark
-    stats: {
-      topSpeed: 185, // km/h
-      acceleration: 26,
-      handling: 0.88,
-      braking: 38,
-      nitroCapacity: 100,
-      nitroBoost: 40
-    },
-    specs: {
-      weight: 1250,
-      drive: 'RWD',
-      power: '450 HP',
-      engine: '3.8L Twin-Turbo V6'
-    }
-  },
-  {
-    id: 'apex_turbo',
-    name: 'Apex Turbo GT',
-    tier: CAR_TIERS.SPORTS,
-    description: 'Lightweight track-focused weapon with razor-sharp response and aggressive downforce.',
-    unlockedByDefault: true,
-    unlockRequirement: 'Unlocked by default',
-    color: '#00b4d8', // Electric Cyan
-    secondaryColor: '#03045e',
+    color: '#0066cc', // Bayside Blue
+    secondaryColor: '#111111',
+    underglowColor: '#00f0ff',
     stats: {
       topSpeed: 215,
       acceleration: 30,
       handling: 0.92,
       braking: 42,
       nitroCapacity: 110,
-      nitroBoost: 45
+      nitroBoost: 50
     },
     specs: {
-      weight: 1180,
-      drive: 'AWD',
-      power: '520 HP',
-      engine: '4.0L Flat-6 Turbo'
+      power: '550 HP',
+      engine: '2.6L Twin-Turbo RB26',
+      drive: 'ATTESA AWD'
     }
   },
   {
-    id: 'thunderbolt_s',
-    name: 'Thunderbolt S',
-    tier: CAR_TIERS.RARE,
-    description: 'High-torque prototype with savage acceleration. Earned through consistent dominance.',
-    unlockedByDefault: false,
-    unlockRequirement: 'Win 3 consecutive races on EASY difficulty',
-    requiredDifficulty: 'easy',
-    color: '#ffb703', // Electric Gold
-    secondaryColor: '#111111',
+    id: 'toyota_supra',
+    name: 'Toyota Supra Turbo 2JZ',
+    tier: CAR_TIERS.TUNER,
+    description: 'Straight-line bullet. Big single turbo 2JZ-GTE producing screaming high-RPM horsepower.',
+    unlockedByDefault: true,
+    unlockRequirement: 'Unlocked by default',
+    color: '#ff6600', // Metallic Orange
+    secondaryColor: '#222222',
+    underglowColor: '#ff0055',
     stats: {
       topSpeed: 235,
-      acceleration: 34,
-      handling: 0.94,
-      braking: 45,
+      acceleration: 33,
+      handling: 0.89,
+      braking: 40,
+      nitroCapacity: 120,
+      nitroBoost: 55
+    },
+    specs: {
+      power: '680 HP',
+      engine: '3.0L Turbo 2JZ-GTE',
+      drive: 'RWD Limited Slip'
+    }
+  },
+  {
+    id: 'mazda_rx7',
+    name: 'Mazda RX-7 FD3S Spirit R',
+    tier: CAR_TIERS.TUNER,
+    description: 'Rotary-powered drift scalpel with razor-sharp balance and effortless counter-steer initiation.',
+    unlockedByDefault: false,
+    unlockRequirement: 'Win race on ROOKIE difficulty',
+    requiredDifficulty: 'easy',
+    color: '#ffcc00', // Sunburst Yellow
+    secondaryColor: '#1a1a1a',
+    underglowColor: '#39ff14',
+    stats: {
+      topSpeed: 228,
+      acceleration: 32,
+      handling: 0.98,
+      braking: 44,
       nitroCapacity: 125,
       nitroBoost: 50
     },
     specs: {
-      weight: 1150,
-      drive: 'RWD',
-      power: '610 HP',
-      engine: '5.2L V10'
+      power: '480 HP',
+      engine: '1.3L Twin-Turbo 13B-REW',
+      drive: 'RWD 50:50 Balance'
     }
   },
   {
-    id: 'monza_v12',
-    name: 'Monza V12 Stradale',
-    tier: CAR_TIERS.RARE,
-    description: 'Italian thoroughbred boasting screaming high-RPM horsepower and aerodynamic stability.',
+    id: 'bmw_m3_gtr',
+    name: 'BMW M3 GTR E46 Most Wanted',
+    tier: CAR_TIERS.HERO,
+    description: 'The iconic silver-and-blue Most Wanted hero car. Screaming 4.0L P60B40 V8 with straight-cut gears.',
     unlockedByDefault: false,
-    unlockRequirement: 'Win 3 consecutive races on MEDIUM difficulty',
+    unlockRequirement: 'Win race on PRO difficulty',
     requiredDifficulty: 'medium',
-    color: '#d90429', // Rosso Scuderia
-    secondaryColor: '#ffdd00',
+    color: '#d6d6d6', // Silver with blue stripes
+    secondaryColor: '#0044cc',
+    underglowColor: '#00f0ff',
     stats: {
-      topSpeed: 260,
-      acceleration: 37,
-      handling: 0.96,
+      topSpeed: 265,
+      acceleration: 38,
+      handling: 0.95,
       braking: 48,
       nitroCapacity: 135,
-      nitroBoost: 55
+      nitroBoost: 60
     },
     specs: {
-      weight: 1220,
-      drive: 'RWD',
-      power: '750 HP',
-      engine: '6.5L Naturally Aspirated V12'
+      power: '720 HP',
+      engine: '4.0L Naturally Aspirated V8',
+      drive: 'RWD Straight-Cut'
     }
   },
   {
-    id: 'phantom_rs',
-    name: 'Phantom RS Cyber',
-    tier: CAR_TIERS.SUPERCAR,
-    description: 'Futuristic hybrid hypercar engineered for extreme cornering g-forces and instant nitro release.',
+    id: 'porsche_911',
+    name: 'Porsche 911 GT3 RS',
+    tier: CAR_TIERS.EXOTIC,
+    description: 'Precision German track weapon with massive downforce, rear-engine traction, and launch control.',
     unlockedByDefault: false,
-    unlockRequirement: 'Win 3 consecutive races on HARD difficulty',
+    unlockRequirement: 'Win race on OUTLAW difficulty',
     requiredDifficulty: 'hard',
-    color: '#7209b7', // Neon Violet
-    secondaryColor: '#4cc9f0',
+    color: '#06d6a0', // Viper Green
+    secondaryColor: '#000000',
+    underglowColor: '#39ff14',
     stats: {
-      topSpeed: 285,
+      topSpeed: 290,
       acceleration: 42,
-      handling: 0.98,
-      braking: 52,
+      handling: 0.99,
+      braking: 54,
       nitroCapacity: 145,
       nitroBoost: 65
     },
     specs: {
-      weight: 1090,
-      drive: 'AWD Quad-Motor',
-      power: '980 HP',
-      engine: 'Hybrid Twin-Turbo V8 + Tri-E-Motor'
+      power: '800 HP',
+      engine: '4.0L Flat-6 Boxer',
+      drive: 'RWD Active Aero'
     }
   },
   {
-    id: 'hyperion_chrono',
-    name: 'Hyperion Chrono X',
-    tier: CAR_TIERS.LEGENDARY,
-    description: 'The pinnacle of racing engineering. Unrivalled top speed, unmatched downforce and infinite prestige.',
+    id: 'lamborghini_mvr',
+    name: 'Lamborghini Murciélago LP640',
+    tier: CAR_TIERS.EXOTIC,
+    description: 'Roaring Italian V12 all-wheel-drive brute. Insane high-speed pull and untamed aggression.',
     unlockedByDefault: false,
-    unlockRequirement: 'Win 3 consecutive races on LEGEND difficulty',
+    unlockRequirement: 'Win race on MOST WANTED difficulty',
     requiredDifficulty: 'legend',
-    color: '#06d6a0', // Hyper Cyan / Emerald
-    secondaryColor: '#f72585',
+    color: '#7209b7', // Matte Purple
+    secondaryColor: '#ff0055',
+    underglowColor: '#bf00ff',
     stats: {
-      topSpeed: 315,
+      topSpeed: 320,
       acceleration: 46,
-      handling: 1.0,
+      handling: 0.96,
       braking: 58,
       nitroCapacity: 160,
       nitroBoost: 75
     },
     specs: {
-      weight: 1020,
-      drive: 'AWD Active Aero',
-      power: '1250 HP',
-      engine: 'Hyper-Velocity Quad-Turbo W16'
+      power: '950 HP',
+      engine: '6.5L Naturally Aspirated V12',
+      drive: 'AWD Viscous'
     }
   }
 ];

@@ -31,10 +31,10 @@ const DEFAULT_SETTINGS = {
 };
 
 const DEFAULT_PROGRESS = {
-  selectedCar: 'viper_gtr',
+  selectedCar: 'nissan_skyline',
   selectedTrack: 'goa_marine',
   difficulty: 'medium', // 'easy', 'medium', 'hard', 'legend'
-  unlockedCars: ['viper_gtr', 'apex_turbo'],
+  unlockedCars: ['nissan_skyline', 'toyota_supra'],
   unlockedTracks: ['goa_marine'], // Initially only one map is unlocked!
   streaks: {
     easy: 0,
@@ -220,10 +220,10 @@ export class StorageManager {
 
       // 3. Check for exclusive car unlock (3 consecutive wins on that difficulty)
       const REWARD_MAP = {
-        easy: 'thunderbolt_s',
-        medium: 'monza_v12',
-        hard: 'phantom_rs',
-        legend: 'hyperion_chrono'
+        easy: 'mazda_rx7',
+        medium: 'bmw_m3_gtr',
+        hard: 'porsche_911',
+        legend: 'lamborghini_mvr'
       };
 
       const rewardCar = REWARD_MAP[diffKey];

@@ -245,6 +245,31 @@ class AudioManager {
     }
   }
 
+  /* ---------------- TURBO BLOW-OFF VALVE ---------------- */
+  playBlowoff() {
+    this.ensureContext();
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+
+    // High pressure hiss with flutter
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this.createNoiseBuffer(0.35);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2400, t);
+    filter.Q.setValueAtTime(4.0, t);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+    noise.start(t);
+  }
+
   /* ---------------- ONE-SHOT SFX ---------------- */
   playCollision(intensity = 0.5) {
     this.ensureContext();

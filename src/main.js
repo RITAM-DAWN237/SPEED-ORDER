@@ -1,7 +1,6 @@
 /**
- * main.js - Application entry point.
- * Coordinates Three.js WebGL renderer, garage showroom,
- * race engine, multiplayer synchronization, and UI lifecycle.
+ * main.js - Application Entry Point for Need for Speed: Speed Order.
+ * Initializes Three.js WebGL renderer, showroom, race engine, and UI lifecycle.
  */
 
 import * as THREE from 'three';
@@ -11,7 +10,6 @@ import { input } from './core/Input.js';
 import { UIManager } from './ui/UIManager.js';
 import { TrackManager } from './tracks/TrackManager.js';
 import { RaceEngine } from './game/RaceEngine.js';
-import { FirebaseManager } from './multiplayer/FirebaseManager.js';
 import { Vehicle } from './game/Vehicle.js';
 import { CARS, getCarById } from './game/CarCatalog.js';
 
@@ -27,11 +25,9 @@ class GameApp {
     this.trackManager = null;
     this.raceEngine = null;
     this.ui = null;
-    this.firebase = null;
 
     // Showroom / Garage inspection
     this.garageVehicle = null;
-    this.garageRotationAngle = 0;
     this.isDraggingGarage = false;
     this.garageDragStartX = 0;
 
@@ -70,7 +66,6 @@ class GameApp {
     this.trackManager = new TrackManager(this.scene);
     this.ui = new UIManager(this);
     this.raceEngine = new RaceEngine(this.scene, this.camera, this.ui, this.trackManager);
-    this.firebase = new FirebaseManager(this);
 
     // 3. Bind Touch Controls
     input.bindTouchControls({
@@ -89,16 +84,23 @@ class GameApp {
       this.ui.refreshSettingsUI();
     };
 
-    // 4. Bind Events & Callbacks
+    // 4. Bind Events & Interactions
     this.bindWindowEvents();
     this.bindGarageInteractions();
-    this.bindMultiplayerUI();
 
-    // 5. Initial State: Load default track and showcase car
-    this.trackManager.loadTrack(storage.progress.selectedTrack || 'goa_marine', quality);
-    this.showcaseGarageCar(storage.progress.selectedCar || 'viper_gtr');
+    // 5. Initial State: Load track and showcase car
+    const initialTrack = storage.progress.selectedTrack || 'goa_marine';
+    const initialCar = storage.progress.selectedCar || 'nissan_skyline';
 
-    // Start background synth audio on first user gesture
+    // If previously saved car was not in new catalog, set to default
+    if (!CARS.find(c => c.id === initialCar)) {
+      storage.saveProgress({ selectedCar: 'nissan_skyline', unlockedCars: ['nissan_skyline', 'toyota_supra'] });
+    }
+
+    this.trackManager.loadTrack(initialTrack, quality);
+    this.showcaseGarageCar(storage.progress.selectedCar || 'nissan_skyline');
+
+    // Start background audio on first user gesture
     const startAudioOnGesture = () => {
       audio.init();
       audio.startBGM();
@@ -162,7 +164,6 @@ class GameApp {
   }
 
   onEnterMainMenu() {
-    // Reset camera position for cinematic sweep
     this.camera.position.set(0, 8, 25);
     this.camera.lookAt(0, 2, 0);
   }
@@ -212,229 +213,37 @@ class GameApp {
     audio.startBGM();
   }
 
-  /* ---------------- MULTIPLAYER BINDINGS ---------------- */
-  bindMultiplayerUI() {
-    const mpEntry = document.getElementById('mp-entry-view');
-    const mpLobby = document.getElementById('mp-lobby-view');
-    const btnCreate = document.getElementById('btn-create-room');
-    const btnJoin = document.getElementById('btn-join-room');
-    const inputCode = document.getElementById('input-room-code');
-    const btnCopy = document.getElementById('btn-copy-code');
-    const btnReady = document.getElementById('btn-lobby-ready');
-    const btnStart = document.getElementById('btn-lobby-start');
-    const btnLeave = document.getElementById('btn-lobby-leave');
-
-    const p1Name = document.getElementById('lobby-p1-name');
-    const p1Car = document.getElementById('lobby-p1-car');
-    const p1Ready = document.getElementById('lobby-p1-ready');
-
-    const p2Name = document.getElementById('lobby-p2-name');
-    const p2Car = document.getElementById('lobby-p2-car');
-    const p2Ready = document.getElementById('lobby-p2-ready');
-
-    const lobbyTrackSelect = document.getElementById('lobby-track-select');
-    const lobbyStatusBadge = document.getElementById('lobby-status-badge');
-    const lobbyRoomCode = document.getElementById('lobby-room-code');
-
-    // Toggle Firebase Config Box
-    const btnToggleFb = document.getElementById('btn-toggle-fb-config');
-    const panelFb = document.getElementById('mp-fb-config-panel');
-    const txtFbConfig = document.getElementById('fb-config-input');
-    const btnSaveFb = document.getElementById('btn-save-fb-config');
-    const btnDemoFb = document.getElementById('btn-demo-fb-mode');
-
-    btnToggleFb.addEventListener('click', () => {
-      panelFb.classList.toggle('hidden');
-    });
-
-    btnSaveFb.addEventListener('click', () => {
-      try {
-        const val = JSON.parse(txtFbConfig.value);
-        this.firebase.saveCustomConfig(val);
-        alert('Firebase configuration saved successfully!');
-        panelFb.classList.add('hidden');
-      } catch (e) {
-        alert('Invalid JSON config format. Please check the object.');
-      }
-    });
-
-    btnDemoFb.addEventListener('click', () => {
-      this.firebase.enableSimulatedMode();
-      alert('Simulated 1v1 mode activated! You can now create and test rooms without Firebase setup.');
-      panelFb.classList.add('hidden');
-    });
-
-    // Create Room
-    btnCreate.addEventListener('click', async () => {
-      const name = document.getElementById('mp-player-name').value;
-      const res = await this.firebase.createRoom(name, storage.progress.selectedCar, lobbyTrackSelect.value);
-      if (res.success) {
-        mpEntry.classList.add('hidden');
-        mpLobby.classList.remove('hidden');
-        lobbyRoomCode.textContent = res.roomCode;
-        p1Name.textContent = name;
-        const car = getCarById(storage.progress.selectedCar);
-        p1Car.textContent = `Car: ${car.name}`;
-        lobbyTrackSelect.disabled = false;
-      } else {
-        alert(`Failed to create room: ${res.error}`);
-      }
-    });
-
-    // Join Room
-    btnJoin.addEventListener('click', async () => {
-      const code = inputCode.value;
-      if (!code || code.length < 4) {
-        alert('Please enter a valid 6-character room code.');
-        return;
-      }
-      const name = document.getElementById('mp-player-name').value;
-      const res = await this.firebase.joinRoom(code, name, storage.progress.selectedCar);
-      if (res.success) {
-        mpEntry.classList.add('hidden');
-        mpLobby.classList.remove('hidden');
-        lobbyRoomCode.textContent = code.toUpperCase();
-        p2Name.textContent = name;
-        const car = getCarById(storage.progress.selectedCar);
-        p2Car.textContent = `Car: ${car.name}`;
-        lobbyTrackSelect.disabled = true; // Guest cannot change track
-      } else {
-        alert(res.error);
-      }
-    });
-
-    // Copy Code Button
-    btnCopy.addEventListener('click', () => {
-      navigator.clipboard.writeText(lobbyRoomCode.textContent).then(() => {
-        btnCopy.textContent = 'COPIED!';
-        setTimeout(() => { btnCopy.textContent = 'COPY'; }, 1500);
-      });
-    });
-
-    // Leave Room
-    btnLeave.addEventListener('click', async () => {
-      await this.firebase.leaveRoom();
-      mpLobby.classList.add('hidden');
-      mpEntry.classList.remove('hidden');
-    });
-
-    // Start Race
-    btnStart.addEventListener('click', () => {
-      this.firebase.startMatch();
-    });
-
-    // Firebase Room Updates listener
-    this.firebase.onRoomUpdate = (data) => {
-      const players = Object.values(data.players || {});
-      const p1 = players.find(p => p.isHost) || players[0];
-      const p2 = players.find(p => !p.isHost) || (players.length > 1 ? players[1] : null);
-
-      if (p1) {
-        p1Name.textContent = p1.name;
-        const c1 = getCarById(p1.carId);
-        p1Car.textContent = `Car: ${c1.name}`;
-        p1Ready.textContent = p1.ready ? 'READY' : 'NOT READY';
-        p1Ready.className = `slot-ready-status ${p1.ready ? 'ready' : ''}`;
-      }
-
-      if (p2) {
-        p2Name.textContent = p2.name;
-        const c2 = getCarById(p2.carId);
-        p2Car.textContent = `Car: ${c2.name}`;
-        p2Ready.textContent = p2.ready ? 'READY' : 'NOT READY';
-        p2Ready.className = `slot-ready-status ${p2.ready ? 'ready' : ''}`;
-        lobbyStatusBadge.textContent = 'BOTH RACERS CONNECTED';
-        lobbyStatusBadge.className = 'badge-status unlocked';
-
-        // Enable Start for Host if both ready
-        if (this.firebase.isHost && p1.ready && p2.ready) {
-          btnStart.disabled = false;
-          btnStart.classList.remove('disabled');
-        } else {
-          btnStart.disabled = true;
-          btnStart.classList.add('disabled');
-        }
-      } else {
-        p2Name.textContent = 'Waiting for rival...';
-        p2Car.textContent = 'Car: --';
-        p2Ready.textContent = 'WAITING';
-        p2Ready.className = 'slot-ready-status';
-        lobbyStatusBadge.textContent = 'WAITING FOR RIVAL...';
-        lobbyStatusBadge.className = 'badge-status waiting';
-        btnStart.disabled = true;
-        btnStart.classList.add('disabled');
-      }
-
-      if (data.trackId && !this.firebase.isHost) {
-        lobbyTrackSelect.value = data.trackId;
-      }
-    };
-
-    // Synchronized Countdown Trigger
-    this.firebase.onCountdownStarted = () => {
-      mpLobby.classList.add('hidden');
-      audio.stopBGM();
-
-      // Launch 1v1 Race with Remote Opponent
-      const remoteVehicle = new Vehicle(this.scene, 'apex_turbo', false);
-      this.raceEngine.startRace({
-        trackId: lobbyTrackSelect.value,
-        carId: storage.progress.selectedCar,
-        difficulty: 'medium',
-        laps: 3,
-        opponents: 1,
-        isMultiplayer: true,
-        remotePlayer: remoteVehicle
-      });
-
-      // Periodic state sync to Firebase during race
-      if (this.mpSyncTimer) clearInterval(this.mpSyncTimer);
-      this.mpSyncTimer = setInterval(() => {
-        if (this.raceEngine.isActive && this.raceEngine.playerVehicle) {
-          this.firebase.sendVehicleState(this.raceEngine.playerVehicle);
-        } else {
-          clearInterval(this.mpSyncTimer);
-        }
-      }, 60); // 16.6 updates per second
-    };
-  }
-
   /* ---------------- ANIMATION & RENDER LOOP ---------------- */
   animate() {
     requestAnimationFrame(() => this.animate());
 
     const now = performance.now();
-    const dt = Math.min(0.1, (now - this.lastTime) / 1000); // Clamped delta-time
+    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
     this.lastTime = now;
 
     // FPS Counter
     this.frameCount++;
     if (now - this.lastFpsUpdate >= 500) {
       const fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsUpdate));
-      this.ui.fpsCounter.textContent = `${fps} FPS`;
+      if (this.ui.fpsCounter) this.ui.fpsCounter.textContent = `${fps} FPS`;
       this.frameCount = 0;
       this.lastFpsUpdate = now;
     }
 
     if (this.isPaused) return;
 
-    // 1. In Race: Update Race Engine
+    // 1. Race Active
     if (this.raceEngine.isActive) {
       this.raceEngine.update(dt);
-
-      // Interpolate remote player if in multiplayer
-      if (this.raceEngine.remoteOpponent) {
-        this.firebase.interpolateRemoteVehicle(this.raceEngine.remoteOpponent, dt);
-      }
     }
-    // 2. In Garage: Gentle rotation if not dragging
+    // 2. Garage Showroom
     else if (this.ui.currentScreenId === 'screen-garage') {
       if (this.garageVehicle && !this.isDraggingGarage) {
         this.garageVehicle.heading += 0.4 * dt;
         this.garageVehicle.group.rotation.y = this.garageVehicle.heading;
       }
     }
-    // 3. Main Menu: Cinematic camera orbit around track
+    // 3. Main Menu Orbit
     else if (this.ui.currentScreenId === 'screen-main-menu') {
       this.menuAngle += 0.2 * dt;
       const camX = Math.sin(this.menuAngle) * 24;
@@ -448,12 +257,18 @@ class GameApp {
       }
     }
 
-    // Render 3D Scene
+    // Render Scene
     this.renderer.render(this.scene, this.camera);
   }
 }
 
-// Instantiate on window load
-window.addEventListener('DOMContentLoaded', () => {
+// Immediate execution resilient to document loading state
+function bootApp() {
   new GameApp();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}

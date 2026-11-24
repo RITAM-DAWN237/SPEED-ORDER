@@ -16,11 +16,11 @@ export const AI_NAMES = [
 ];
 
 export const AI_CAR_IDS = [
-  'apex_turbo',
-  'viper_gtr',
-  'monza_v12',
-  'thunderbolt_s',
-  'phantom_rs'
+  'toyota_supra',
+  'mazda_rx7',
+  'bmw_m3_gtr',
+  'porsche_911',
+  'lamborghini_mvr'
 ];
 
 export class AIController {

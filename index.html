@@ -3,779 +3,466 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>WORLD RACING CHAMPIONSHIP — SPEED ORDER</title>
+  <title>NEED FOR SPEED: SPEED ORDER — Underground Web Arcade</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css" />
 </head>
-<body>
-  <!-- Canvas Container for Three.js -->
+<body class="nfs-theme">
+  <!-- 3D Canvas Mount -->
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
   </div>
 
-  <!-- UI Overlays Container -->
+  <!-- Speed Motion Lines Overlay for NOS -->
+  <div id="nos-motion-overlay" class="nos-motion hidden"></div>
+
+  <!-- Main UI Layer -->
   <div id="ui-layer">
 
-    <!-- Top Status Bar (Audio Toggle, FPS, Login) -->
-    <header class="top-bar">
-      <div class="brand">
-        <span class="brand-badge">WRC</span>
-        <span class="brand-text">SPEED ORDER</span>
+    <!-- Top Status Bar -->
+    <header class="nfs-top-bar">
+      <div class="nfs-logo">
+        <span class="nfs-sub-title">EA STYLE ARCADE</span>
+        <div class="nfs-brand">
+          <span class="brand-italic">NEED FOR</span>
+          <span class="brand-bold">SPEED</span>
+          <span class="brand-edition">SPEED ORDER</span>
+        </div>
       </div>
-      <div class="top-actions">
-        <button id="btn-auth-toggle" class="auth-pill-btn" title="Login to save progress to cloud">👤 LOGIN / CLOUD SAVE</button>
-        <button id="btn-sound-toggle" class="icon-btn" title="Toggle Audio">🔊</button>
-        <button id="btn-fullscreen-toggle" class="icon-btn" title="Toggle Fullscreen">⛶</button>
-        <span id="fps-counter" class="fps-pill">60 FPS</span>
+      <div class="top-bar-right">
+        <button id="btn-sound-toggle" class="nfs-icon-btn" title="Toggle Sound">🔊</button>
+        <button id="btn-fullscreen-toggle" class="nfs-icon-btn" title="Fullscreen">⛶</button>
+        <span id="fps-counter" class="nfs-fps-badge">60 FPS</span>
       </div>
     </header>
 
-    <!-- 1. MAIN MENU SCREEN -->
-    <section id="screen-main-menu" class="screen active">
-      <div class="menu-hero">
-        <div class="championship-tag">ARCADE RACING SIMULATOR</div>
-        <h1 class="game-title">
-          <span class="title-glow">WORLD RACING</span>
-          <span class="title-sub">CHAMPIONSHIP</span>
-        </h1>
-        <p class="tagline">Push the limits across 7 global tracks in semi-3D high-octane racing.</p>
-      </div>
+    <!-- SCREEN 1: MAIN MENU -->
+    <section id="screen-main-menu" class="nfs-screen active">
+      <div class="menu-stage">
+        <div class="nfs-hero-box">
+          <div class="street-badge">ILLEGAL STREET RACING LEAGUE</div>
+          <h1 class="nfs-glitch-title">
+            <span class="title-top">NEED FOR SPEED</span>
+            <span class="title-bottom">SPEED ORDER</span>
+          </h1>
+          <p class="nfs-subtitle">Own the city streets. Drop the hammer, hit the NOS, and smoke the competition.</p>
+        </div>
 
-      <nav class="menu-nav">
-        <button class="menu-btn primary" data-target="screen-track-select">
-          <span class="btn-icon">🏁</span>
-          <span class="btn-text">PLAY RACE</span>
-          <span class="btn-glow"></span>
-        </button>
-        <button class="menu-btn" data-target="screen-multiplayer">
-          <span class="btn-icon">🌐</span>
-          <span class="btn-text">MULTIPLAYER 1V1</span>
-        </button>
-        <button class="menu-btn" data-target="screen-garage">
-          <span class="btn-icon">🏎️</span>
-          <span class="btn-text">GARAGE</span>
-        </button>
-        <button class="menu-btn" data-target="screen-championship">
-          <span class="btn-icon">🏆</span>
-          <span class="btn-text">CHAMPIONSHIP STREAKS</span>
-        </button>
-        <button class="menu-btn" data-target="screen-statistics">
-          <span class="btn-icon">📊</span>
-          <span class="btn-text">STATISTICS</span>
-        </button>
-        <button class="menu-btn" data-target="screen-settings">
-          <span class="btn-icon">⚙️</span>
-          <span class="btn-text">SETTINGS</span>
-        </button>
-        <button class="menu-btn" data-target="screen-credits">
-          <span class="btn-icon">ℹ️</span>
-          <span class="btn-text">CREDITS</span>
-        </button>
-      </nav>
+        <nav class="nfs-main-nav">
+          <button id="btn-quick-play" class="nfs-menu-btn primary">
+            <span class="btn-skew"></span>
+            <span class="btn-label"><span class="btn-arrow">▶</span> QUICK RACE</span>
+            <span class="btn-tag">INSTANT ACTION</span>
+          </button>
 
-      <div class="menu-footer">
-        <span class="footer-hint">Controls: WASD / Arrows to Drive • Space for Handbrake • Shift for Nitro • C for Camera • R to Respawn</span>
+          <button id="btn-track-select-menu" class="nfs-menu-btn" data-target="screen-track-select">
+            <span class="btn-skew"></span>
+            <span class="btn-label">🏁 STREET CIRCUITS</span>
+            <span class="btn-tag">7 TRACKS</span>
+          </button>
+
+          <button id="btn-garage-menu" class="nfs-menu-btn" data-target="screen-garage">
+            <span class="btn-skew"></span>
+            <span class="btn-label">🔧 THE GARAGE</span>
+            <span class="btn-tag">TUNER & SUPER</span>
+          </button>
+
+          <button id="btn-multiplayer-menu" class="nfs-menu-btn" data-target="screen-multiplayer">
+            <span class="btn-skew"></span>
+            <span class="btn-label">🌐 MULTIPLAYER</span>
+            <span class="btn-tag locked-tag">COMING SOON</span>
+          </button>
+
+          <button id="btn-settings-menu" class="nfs-menu-btn" data-target="screen-settings">
+            <span class="btn-skew"></span>
+            <span class="btn-label">⚙️ TUNING & SETTINGS</span>
+          </button>
+        </nav>
+
+        <div class="nfs-controls-hint">
+          <span>PC: <strong>W/A/S/D</strong> or <strong>ARROWS</strong> to Drive • <strong>SPACE</strong> Drift / Handbrake • <strong>SHIFT</strong> Nitrous Boost • <strong>C</strong> Camera</span>
+        </div>
       </div>
     </section>
 
-    <!-- 2. TRACK SELECTION SCREEN -->
-    <section id="screen-track-select" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>SELECT RACING LOCATION</h2>
-        <div class="header-spacer"></div>
+    <!-- SCREEN 2: TRACK SELECTION -->
+    <section id="screen-track-select" class="nfs-screen">
+      <div class="nfs-screen-header">
+        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
+        <h2>STREET RACING CIRCUITS</h2>
+        <div class="header-decor"></div>
       </div>
 
-      <div class="track-carousel" id="track-carousel">
-        <!-- Injected via TrackManager -->
+      <div class="track-grid" id="track-carousel">
+        <!-- Rendered dynamically -->
       </div>
 
-      <div class="race-setup-bar">
-        <div class="setup-group">
+      <div class="nfs-race-bar">
+        <div class="race-bar-item">
           <label>DIFFICULTY:</label>
-          <div class="btn-group" id="difficulty-selector">
-            <button class="toggle-btn" data-difficulty="easy">EASY</button>
-            <button class="toggle-btn active" data-difficulty="medium">MEDIUM</button>
-            <button class="toggle-btn" data-difficulty="hard">HARD</button>
-            <button class="toggle-btn legend" data-difficulty="legend">LEGEND</button>
+          <div class="nfs-pill-group" id="difficulty-selector">
+            <button class="nfs-pill" data-difficulty="easy">ROOKIE</button>
+            <button class="nfs-pill active" data-difficulty="medium">PRO</button>
+            <button class="nfs-pill" data-difficulty="hard">OUTLAW</button>
+            <button class="nfs-pill legend" data-difficulty="legend">MOST WANTED</button>
           </div>
         </div>
 
-        <div class="setup-group">
+        <div class="race-bar-item">
           <label>LAPS:</label>
-          <div class="btn-group" id="laps-selector">
-            <button class="toggle-btn" data-laps="1">1 LAP</button>
-            <button class="toggle-btn active" data-laps="3">3 LAPS</button>
-            <button class="toggle-btn" data-laps="5">5 LAPS</button>
+          <div class="nfs-pill-group" id="laps-selector">
+            <button class="nfs-pill" data-laps="1">1 LAP</button>
+            <button class="nfs-pill active" data-laps="3">3 LAPS</button>
+            <button class="nfs-pill" data-laps="5">5 LAPS</button>
           </div>
         </div>
 
-        <div class="setup-group">
-          <label>OPPONENTS:</label>
-          <div class="btn-group" id="opponents-selector">
-            <button class="toggle-btn" data-opponents="1">1 AI</button>
-            <button class="toggle-btn" data-opponents="3">3 AI</button>
-            <button class="toggle-btn active" data-opponents="5">5 AI</button>
-          </div>
-        </div>
-
-        <button id="btn-launch-race" class="btn-launch">
-          <span>START RACE</span>
-          <span class="btn-arrow">➔</span>
+        <button id="btn-launch-race" class="nfs-btn-start">
+          <span>RACE NOW</span>
+          <span class="start-chevron">➔</span>
         </button>
       </div>
     </section>
 
-    <!-- 3. GARAGE SCREEN -->
-    <section id="screen-garage" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>3D VEHICLE GARAGE</h2>
-        <div class="header-spacer"></div>
+    <!-- SCREEN 3: GARAGE -->
+    <section id="screen-garage" class="nfs-screen">
+      <div class="nfs-screen-header">
+        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
+        <h2>THE CHOP SHOP & GARAGE</h2>
+        <div class="header-decor"></div>
       </div>
 
-      <div class="garage-content">
-        <div class="garage-info-card">
-          <div class="car-badge-row">
-            <span id="garage-car-tier" class="badge-tier">SUPERCAR</span>
-            <span id="garage-car-status" class="badge-status unlocked">UNLOCKED</span>
+      <div class="garage-panel-wrap">
+        <div class="garage-card">
+          <div class="garage-card-top">
+            <span id="garage-car-tier" class="car-tier-pill">STREET TUNER</span>
+            <span id="garage-car-status" class="car-status-pill unlocked">UNLOCKED</span>
           </div>
 
-          <h3 id="garage-car-name">Viper GT-R</h3>
-          <p id="garage-car-desc" class="car-desc">Balanced track machine.</p>
+          <h3 id="garage-car-name">NISSAN SKYLINE GT-R</h3>
+          <p id="garage-car-desc" class="car-bio">Twin-turbo AWD street monster. Legendary tuner machine.</p>
 
-          <div class="specs-grid">
-            <div class="spec-item">
-              <span class="spec-label">Engine</span>
-              <span id="spec-engine" class="spec-val">3.8L V6 Twin-Turbo</span>
+          <div class="garage-specs">
+            <div class="spec-col">
+              <span class="spec-k">POWER</span>
+              <span id="spec-power" class="spec-v">550 HP</span>
             </div>
-            <div class="spec-item">
-              <span class="spec-label">Power</span>
-              <span id="spec-power" class="spec-val">450 HP</span>
+            <div class="spec-col">
+              <span class="spec-k">ENGINE</span>
+              <span id="spec-engine" class="spec-v">2.6L RB26DETT</span>
             </div>
-            <div class="spec-item">
-              <span class="spec-label">Drivetrain</span>
-              <span id="spec-drive" class="spec-val">RWD</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Weight</span>
-              <span id="spec-weight" class="spec-val">1250 KG</span>
+            <div class="spec-col">
+              <span class="spec-k">DRIVE</span>
+              <span id="spec-drive" class="spec-v">ATTESA AWD</span>
             </div>
           </div>
 
-          <div class="stats-bars">
-            <div class="stat-row">
-              <div class="stat-labels">
-                <span>TOP SPEED</span>
-                <span id="stat-val-speed">185 KM/H</span>
-              </div>
-              <div class="bar-track"><div id="bar-speed" class="bar-fill" style="width: 60%"></div></div>
+          <!-- Dynamic Stat Bars -->
+          <div class="nfs-stat-bars">
+            <div class="stat-line">
+              <div class="stat-meta"><span>TOP SPEED</span><strong id="stat-val-speed">215 KM/H</strong></div>
+              <div class="stat-bar"><div id="bar-speed" class="bar-inner" style="width: 70%"></div></div>
             </div>
-
-            <div class="stat-row">
-              <div class="stat-labels">
-                <span>ACCELERATION</span>
-                <span id="stat-val-accel">26</span>
-              </div>
-              <div class="bar-track"><div id="bar-accel" class="bar-fill" style="width: 55%"></div></div>
+            <div class="stat-line">
+              <div class="stat-meta"><span>ACCELERATION</span><strong id="stat-val-accel">30</strong></div>
+              <div class="stat-bar"><div id="bar-accel" class="bar-inner" style="width: 65%"></div></div>
             </div>
-
-            <div class="stat-row">
-              <div class="stat-labels">
-                <span>HANDLING</span>
-                <span id="stat-val-handling">0.88</span>
-              </div>
-              <div class="bar-track"><div id="bar-handling" class="bar-fill" style="width: 70%"></div></div>
+            <div class="stat-line">
+              <div class="stat-meta"><span>DRIFT HANDLING</span><strong id="stat-val-handling">0.92</strong></div>
+              <div class="stat-bar"><div id="bar-handling" class="bar-inner" style="width: 75%"></div></div>
             </div>
-
-            <div class="stat-row">
-              <div class="stat-labels">
-                <span>BRAKING</span>
-                <span id="stat-val-braking">38</span>
-              </div>
-              <div class="bar-track"><div id="bar-braking" class="bar-fill" style="width: 65%"></div></div>
-            </div>
-
-            <div class="stat-row">
-              <div class="stat-labels">
-                <span>NITRO BOOST</span>
-                <span id="stat-val-nitro">100</span>
-              </div>
-              <div class="bar-track"><div id="bar-nitro" class="bar-fill cyan" style="width: 60%"></div></div>
+            <div class="stat-line">
+              <div class="stat-meta"><span>NITROUS CAPACITY</span><strong id="stat-val-nitro">110</strong></div>
+              <div class="stat-bar"><div id="bar-nitro" class="bar-inner nos-bar" style="width: 70%"></div></div>
             </div>
           </div>
 
-          <div class="unlock-rule-box" id="garage-unlock-box">
-            <span class="unlock-icon">🔒</span>
-            <span id="garage-unlock-text">Win 3 consecutive races on HARD difficulty to unlock.</span>
+          <!-- Underglow Neon Picker -->
+          <div class="neon-customizer">
+            <label>CHASSIS UNDERGLOW NEON:</label>
+            <div class="neon-colors">
+              <button class="neon-dot active" data-neon="#00f0ff" style="background: #00f0ff;"></button>
+              <button class="neon-dot" data-neon="#ff0055" style="background: #ff0055;"></button>
+              <button class="neon-dot" data-neon="#39ff14" style="background: #39ff14;"></button>
+              <button class="neon-dot" data-neon="#ffb703" style="background: #ffb703;"></button>
+              <button class="neon-dot" data-neon="#bf00ff" style="background: #bf00ff;"></button>
+            </div>
           </div>
 
-          <button id="btn-select-car" class="btn-action primary">SELECT THIS VEHICLE</button>
+          <div id="garage-unlock-box" class="unlock-rule-box hidden">
+            <span>🔒 Win previous circuit to unlock this machine.</span>
+          </div>
+
+          <button id="btn-select-car" class="nfs-btn-action primary">SELECT THIS MACHINE</button>
         </div>
 
-        <div class="garage-viewer-controls">
-          <button id="btn-prev-car" class="garage-nav-btn">‹</button>
-          <span class="viewer-hint">Drag mouse or swipe to rotate car</span>
-          <button id="btn-next-car" class="garage-nav-btn">›</button>
+        <!-- Carousel navigation -->
+        <div class="garage-car-switcher">
+          <button id="btn-prev-car" class="switcher-arrow">◀</button>
+          <span class="switcher-hint">DRAG TO ROTATE 360°</span>
+          <button id="btn-next-car" class="switcher-arrow">▶</button>
         </div>
       </div>
     </section>
 
-    <!-- 4. CHAMPIONSHIP / STREAKS SCREEN -->
-    <section id="screen-championship" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>CHAMPIONSHIP STREAK PROGRESSION</h2>
-        <div class="header-spacer"></div>
+    <!-- SCREEN 4: MULTIPLAYER (COMING SOON) -->
+    <section id="screen-multiplayer" class="nfs-screen">
+      <div class="nfs-screen-header">
+        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
+        <h2>ONLINE STREET MULTIPLAYER</h2>
+        <div class="header-decor"></div>
       </div>
 
-      <div class="championship-grid">
-        <div class="rule-banner">
-          <h3>🏆 THREE-CONSECUTIVE-WIN RULE</h3>
-          <p>Win 3 races in a row at a specific difficulty to unlock its exclusive prototype vehicle. Losing a race resets only that difficulty's streak!</p>
-        </div>
-
-        <div class="streak-cards-container">
-          <!-- Easy -->
-          <div class="streak-card" data-diff="easy">
-            <div class="streak-badge easy">EASY DIVISION</div>
-            <h4>Thunderbolt S</h4>
-            <div class="streak-pips" id="pips-easy">
-              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+      <div class="coming-soon-stage">
+        <div class="coming-soon-card">
+          <div class="cs-badge">SEASON 2 EXPANSION</div>
+          <h1 class="cs-title">COMING SOON....</h1>
+          <p class="cs-desc">Online Street Crews, 1v1 Pink Slip Duels, Real-Time Cop Pursuits and Global Underground Leaderboards are currently under active development.</p>
+          
+          <div class="cs-features-grid">
+            <div class="cs-feature">
+              <span class="cs-icon">🏎️ 1V1</span>
+              <h4>PINK SLIP DUELS</h4>
+              <p>Bet your ride against online rivals in high-stakes head-to-head sprints.</p>
             </div>
-            <div class="streak-status-text" id="status-easy">Current Streak: 0 / 3</div>
-            <div class="streak-reward-status" id="reward-easy">Reward: Locked</div>
+            <div class="cs-feature">
+              <span class="cs-icon">🚨 COP</span>
+              <h4>HEAT PURSUIT</h4>
+              <p>Evade spike strips, road blocks and police helicopters with your crew.</p>
+            </div>
+            <div class="cs-feature">
+              <span class="cs-icon">🌐 CREWS</span>
+              <h4>ONLINE CREW WARS</h4>
+              <p>Form street racing syndicates and dominate city turf on the live world map.</p>
+            </div>
           </div>
 
-          <!-- Medium -->
-          <div class="streak-card" data-diff="medium">
-            <div class="streak-badge medium">MEDIUM DIVISION</div>
-            <h4>Monza V12 Stradale</h4>
-            <div class="streak-pips" id="pips-medium">
-              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
-            </div>
-            <div class="streak-status-text" id="status-medium">Current Streak: 0 / 3</div>
-            <div class="streak-reward-status" id="reward-medium">Reward: Locked</div>
-          </div>
-
-          <!-- Hard -->
-          <div class="streak-card" data-diff="hard">
-            <div class="streak-badge hard">HARD DIVISION</div>
-            <h4>Phantom RS Cyber</h4>
-            <div class="streak-pips" id="pips-hard">
-              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
-            </div>
-            <div class="streak-status-text" id="status-hard">Current Streak: 0 / 3</div>
-            <div class="streak-reward-status" id="reward-hard">Reward: Locked</div>
-          </div>
-
-          <!-- Legend -->
-          <div class="streak-card legend" data-diff="legend">
-            <div class="streak-badge legend">LEGEND DIVISION</div>
-            <h4>Hyperion Chrono X</h4>
-            <div class="streak-pips" id="pips-legend">
-              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
-            </div>
-            <div class="streak-status-text" id="status-legend">Current Streak: 0 / 3</div>
-            <div class="streak-reward-status" id="reward-legend">Reward: Locked</div>
+          <div class="cs-action-row">
+            <button class="nfs-btn-action primary" data-target="screen-track-select">PLAY SINGLE PLAYER IN THE MEANTIME</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 5. STATISTICS SCREEN -->
-    <section id="screen-statistics" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>CAREER STATISTICS</h2>
-        <div class="header-spacer"></div>
+    <!-- SCREEN 5: SETTINGS -->
+    <section id="screen-settings" class="nfs-screen">
+      <div class="nfs-screen-header">
+        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
+        <h2>AUDIO & DISPLAY TUNING</h2>
+        <div class="header-decor"></div>
       </div>
 
-      <div class="stats-container">
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-total-races">0</span>
-          <span class="stat-card-title">TOTAL RACES</span>
-        </div>
-        <div class="stat-card victory">
-          <span class="stat-card-num" id="stat-total-victories">0</span>
-          <span class="stat-card-title">VICTORIES</span>
-        </div>
-        <div class="stat-card defeat">
-          <span class="stat-card-num" id="stat-total-defeats">0</span>
-          <span class="stat-card-title">DEFEATS</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-win-rate">0%</span>
-          <span class="stat-card-title">WIN RATE</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-best-streak">0</span>
-          <span class="stat-card-title">BEST WIN STREAK</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-highest-speed">0 km/h</span>
-          <span class="stat-card-title">TOP SPEED REACHED</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-unlocked-cars">2 / 6</span>
-          <span class="stat-card-title">CARS IN GARAGE</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card-num" id="stat-best-lap">--:--.--</span>
-          <span class="stat-card-title">OVERALL BEST LAP</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. SETTINGS SCREEN -->
-    <section id="screen-settings" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>GAME SETTINGS</h2>
-        <div class="header-spacer"></div>
-      </div>
-
-      <div class="settings-grid">
-        <!-- Audio Settings -->
-        <div class="settings-box">
-          <h3>AUDIO CONTROLS</h3>
-          <div class="setting-row">
-            <label for="setting-master-vol">Master Volume</label>
+      <div class="nfs-settings-container">
+        <div class="settings-card">
+          <h3>AUDIO MIXER</h3>
+          <div class="setting-slider-row">
+            <label>Master Volume</label>
             <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="0.8" />
             <span id="lbl-master-vol">80%</span>
           </div>
-          <div class="setting-row">
-            <label for="setting-music-vol">Music Volume</label>
-            <input type="range" id="setting-music-vol" min="0" max="1" step="0.05" value="0.6" />
-            <span id="lbl-music-vol">60%</span>
-          </div>
-          <div class="setting-row">
-            <label for="setting-sfx-vol">SFX Volume</label>
+          <div class="setting-slider-row">
+            <label>Engine & NOS FX</label>
             <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="0.85" />
             <span id="lbl-sfx-vol">85%</span>
           </div>
-        </div>
-
-        <!-- Graphics & Camera Settings -->
-        <div class="settings-box">
-          <h3>GRAPHICS & DISPLAY</h3>
-          <div class="setting-row">
-            <label>Graphics Quality</label>
-            <div class="btn-group" id="setting-quality-group">
-              <button class="toggle-btn" data-quality="low">LOW</button>
-              <button class="toggle-btn" data-quality="medium">MEDIUM</button>
-              <button class="toggle-btn active" data-quality="high">HIGH</button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <label for="setting-res-scale">Resolution Scaling</label>
-            <input type="range" id="setting-res-scale" min="0.5" max="1.0" step="0.1" value="1.0" />
-            <span id="lbl-res-scale">1.0x</span>
-          </div>
-          <div class="setting-row">
-            <label>Camera Distance</label>
-            <div class="btn-group" id="setting-camera-group">
-              <button class="toggle-btn active" data-cam="close">CLOSE</button>
-              <button class="toggle-btn" data-cam="far">FAR</button>
-              <button class="toggle-btn" data-cam="hood">HOOD</button>
-            </div>
+          <div class="setting-slider-row">
+            <label>Underground Synth Beats</label>
+            <input type="range" id="setting-music-vol" min="0" max="1" step="0.05" value="0.6" />
+            <span id="lbl-music-vol">60%</span>
           </div>
         </div>
 
-        <!-- Controls Settings -->
-        <div class="settings-box">
-          <h3>STEERING SENSITIVITY</h3>
-          <div class="setting-row">
-            <label for="setting-sensitivity">Steering Sensitivity</label>
-            <input type="range" id="setting-sensitivity" min="0.5" max="1.8" step="0.1" value="1.0" />
-            <span id="lbl-sensitivity">1.0x</span>
-          </div>
-          <div class="controls-legend">
-            <h4>PC Keybinds:</h4>
-            <p><strong>W / Up:</strong> Accelerate • <strong>S / Down:</strong> Brake / Reverse</p>
-            <p><strong>A / Left:</strong> Steer Left • <strong>D / Right:</strong> Steer Right</p>
-            <p><strong>Space:</strong> Handbrake / Drift • <strong>Shift:</strong> Nitro Boost</p>
-            <p><strong>C:</strong> Change Camera • <strong>R:</strong> Respawn Car</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. CREDITS SCREEN -->
-    <section id="screen-credits" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>CREDITS & ARCHITECTURE</h2>
-        <div class="header-spacer"></div>
-      </div>
-
-      <div class="credits-card">
-        <h3>WORLD RACING CHAMPIONSHIP — SPEED ORDER</h3>
-        <p class="credits-subtitle">Built with HTML5, CSS3, Vanilla JavaScript, Three.js & Firebase Realtime Database</p>
-        
-        <div class="credits-list">
-          <div class="credit-row">
-            <span class="role">Lead Architect & Developer:</span>
-            <span class="person">Antigravity AI</span>
-          </div>
-          <div class="credit-row">
-            <span class="role">3D Graphics Engine:</span>
-            <span class="person">Three.js (WebGL Procedural Pipeline)</span>
-          </div>
-          <div class="credit-row">
-            <span class="role">Audio Synthesis:</span>
-            <span class="person">Web Audio API Dynamic Synth Engine</span>
-          </div>
-          <div class="credit-row">
-            <span class="role">Multiplayer Infrastructure:</span>
-            <span class="person">Firebase Realtime Database (1v1 Rooms)</span>
-          </div>
-          <div class="credit-row">
-            <span class="role">Deployment:</span>
-            <span class="person">Netlify Edge & Vite Build Suite</span>
-          </div>
-        </div>
-        <p class="credits-note">100% Client-Side Rendered • Zero Paid Assets • Instant Arcade Experience</p>
-      </div>
-    </section>
-
-    <!-- 8. ONLINE 1V1 MULTIPLAYER SCREEN -->
-    <section id="screen-multiplayer" class="screen">
-      <div class="screen-header">
-        <button class="btn-back" data-target="screen-main-menu">← BACK</button>
-        <h2>ONLINE 1V1 MULTIPLAYER</h2>
-        <div class="header-spacer"></div>
-      </div>
-
-      <div class="mp-container">
-        <!-- Room Entry View -->
-        <div id="mp-entry-view" class="mp-box">
-          <div class="mp-player-name-row">
-            <label for="mp-player-name">YOUR RACER TAG:</label>
-            <input type="text" id="mp-player-name" maxlength="14" value="Racer 1" />
-          </div>
-
-          <div class="mp-actions-split">
-            <div class="mp-action-card">
-              <h3>CREATE PRIVATE ROOM</h3>
-              <p>Host a 1v1 match and invite a friend with a 6-character room code.</p>
-              <button id="btn-create-room" class="btn-action primary">CREATE ROOM</button>
-            </div>
-
-            <div class="mp-divider">OR</div>
-
-            <div class="mp-action-card">
-              <h3>JOIN MATCH</h3>
-              <p>Enter the 6-character code provided by your rival.</p>
-              <div class="code-input-row">
-                <input type="text" id="input-room-code" placeholder="CODE" maxlength="6" />
-                <button id="btn-join-room" class="btn-action">JOIN</button>
-              </div>
+        <div class="settings-card">
+          <h3>GRAPHICS QUALITY</h3>
+          <div class="setting-toggle-row">
+            <label>Shader Quality</label>
+            <div class="nfs-pill-group" id="setting-quality-group">
+              <button class="nfs-pill" data-quality="low">LOW</button>
+              <button class="nfs-pill" data-quality="medium">MEDIUM</button>
+              <button class="nfs-pill active" data-quality="high">ULTRA</button>
             </div>
           </div>
-
-          <div class="mp-firebase-config-link">
-            <button id="btn-toggle-fb-config" class="link-btn">⚙️ Configure Firebase Connection</button>
-          </div>
-
-          <!-- Firebase Config Modal Panel -->
-          <div id="mp-fb-config-panel" class="fb-config-panel hidden">
-            <h4>Firebase Realtime Database Configuration</h4>
-            <p>Paste your Firebase web app config JSON or databaseURL below (optional if using configured credentials):</p>
-            <textarea id="fb-config-input" placeholder='{ "apiKey": "...", "authDomain": "...", "databaseURL": "https://...", "projectId": "..." }'></textarea>
-            <div class="fb-config-actions">
-              <button id="btn-save-fb-config" class="btn-small primary">SAVE CONFIG</button>
-              <button id="btn-demo-fb-mode" class="btn-small">USE SIMULATED MULTIPLAYER FOR TESTING</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Room Lobby View -->
-        <div id="mp-lobby-view" class="mp-box hidden">
-          <div class="lobby-header-row">
-            <div>
-              <span class="lobby-label">ROOM CODE:</span>
-              <span id="lobby-room-code" class="lobby-code">------</span>
-              <button id="btn-copy-code" class="btn-small">COPY</button>
-            </div>
-            <div id="lobby-status-badge" class="badge-status waiting">WAITING FOR RIVAL...</div>
-          </div>
-
-          <div class="lobby-players-grid">
-            <!-- Host Card -->
-            <div class="player-slot-card host">
-              <div class="slot-badge">HOST (PLAYER 1)</div>
-              <h4 id="lobby-p1-name">Host Racer</h4>
-              <div class="slot-car" id="lobby-p1-car">Car: Viper GT-R</div>
-              <div class="slot-ready-status" id="lobby-p1-ready">READY</div>
-            </div>
-
-            <div class="vs-badge">VS</div>
-
-            <!-- Guest Card -->
-            <div class="player-slot-card guest">
-              <div class="slot-badge">GUEST (PLAYER 2)</div>
-              <h4 id="lobby-p2-name">Waiting...</h4>
-              <div class="slot-car" id="lobby-p2-car">Car: --</div>
-              <div class="slot-ready-status" id="lobby-p2-ready">NOT READY</div>
-            </div>
-          </div>
-
-          <div class="lobby-controls-row">
-            <div class="lobby-track-select">
-              <label>TRACK (HOST CONTROLS):</label>
-              <select id="lobby-track-select">
-                <option value="goa_marine">Goa Marine Drive</option>
-                <option value="switzerland">Switzerland Meadows</option>
-                <option value="russia_snow">Russia Snow Fields</option>
-                <option value="miami">Miami Nights</option>
-                <option value="scotland">Scotland Highlands</option>
-                <option value="tokyo">Tokyo Drift</option>
-                <option value="egypt">Egypt Dunes</option>
-              </select>
-            </div>
-
-            <div class="lobby-btn-row">
-              <button id="btn-lobby-ready" class="btn-action">TOGGLE READY</button>
-              <button id="btn-lobby-start" class="btn-action primary disabled" disabled>START 1V1 RACE</button>
-              <button id="btn-lobby-leave" class="btn-action danger">LEAVE ROOM</button>
+          <div class="setting-toggle-row">
+            <label>Camera Perspective</label>
+            <div class="nfs-pill-group" id="setting-camera-group">
+              <button class="nfs-pill active" data-cam="close">CHASE CLOSE</button>
+              <button class="nfs-pill" data-cam="far">CHASE FAR</button>
+              <button class="nfs-pill" data-cam="hood">HOOD CAM</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 9. IN-GAME RACING HUD -->
-    <div id="racing-hud" class="hud-overlay hidden">
-      <!-- Top HUD Banner -->
-      <div class="hud-top">
-        <div class="hud-item position-box">
-          <span class="hud-label">POS</span>
-          <span id="hud-pos-main" class="hud-val-big">1</span>
-          <span id="hud-pos-total" class="hud-val-sub">/6</span>
-        </div>
-
-        <div class="hud-item lap-box">
-          <span class="hud-label">LAP</span>
-          <span id="hud-lap-cur" class="hud-val-big">1</span>
-          <span id="hud-lap-total" class="hud-val-sub">/3</span>
-        </div>
-
-        <div class="hud-item time-box">
-          <div class="time-row">
-            <span class="hud-label">TIME:</span>
-            <span id="hud-race-time" class="time-val">00:00.00</span>
-          </div>
-          <div class="time-row best">
-            <span class="hud-label">BEST:</span>
-            <span id="hud-best-lap" class="time-val">--:--.--</span>
+    <!-- IN-GAME RACING HUD (NFS TACHOMETER STYLE) -->
+    <div id="racing-hud" class="nfs-hud hidden">
+      <!-- Top HUD: Position, Lap, Timer -->
+      <div class="hud-top-bar">
+        <div class="hud-stat-box pos-box">
+          <span class="hud-tag">POSITION</span>
+          <div class="stat-digits">
+            <span id="hud-pos-main" class="hud-val-huge">1</span>
+            <span id="hud-pos-total" class="hud-val-sub">/6</span>
           </div>
         </div>
 
-        <div class="hud-actions">
-          <button id="btn-pause-race" class="icon-btn">⏸</button>
+        <div class="hud-stat-box lap-box">
+          <span class="hud-tag">LAP</span>
+          <div class="stat-digits">
+            <span id="hud-lap-cur" class="hud-val-huge">1</span>
+            <span id="hud-lap-total" class="hud-val-sub">/3</span>
+          </div>
         </div>
+
+        <div class="hud-stat-box timer-box">
+          <div class="time-line"><span class="hud-tag">TIME:</span> <span id="hud-race-time" class="time-str">00:00.00</span></div>
+          <div class="time-line best"><span class="hud-tag">BEST:</span> <span id="hud-best-lap" class="time-str">--:--.--</span></div>
+        </div>
+
+        <button id="btn-pause-race" class="hud-pause-btn" title="Pause Game">⏸</button>
       </div>
 
-      <!-- Minimap Canvas (Top-Right) -->
-      <div class="hud-minimap-container">
+      <!-- Drift Points Banner (Shows when drifting!) -->
+      <div id="drift-score-box" class="drift-score-box hidden">
+        <span class="drift-label">DRIFT</span>
+        <span id="drift-pts" class="drift-number">+450</span>
+      </div>
+
+      <!-- Minimap Radar -->
+      <div class="hud-radar-wrap">
         <canvas id="minimap-canvas" width="160" height="160"></canvas>
       </div>
 
-      <!-- Center Countdown Banner (3 -> 2 -> 1 -> GO!) -->
-      <div id="hud-countdown" class="countdown-banner hidden">
+      <!-- Starting Countdown (3 -> 2 -> 1 -> GO!) -->
+      <div id="hud-countdown" class="nfs-countdown hidden">
         <span id="countdown-number">3</span>
       </div>
 
-      <!-- Wrong Way / Notification Banner -->
-      <div id="hud-alert-banner" class="alert-banner hidden">
-        <span id="alert-text">WRONG WAY!</span>
-      </div>
-
-      <!-- Bottom HUD (Speedometer & Nitro Bar) -->
-      <div class="hud-bottom">
-        <div class="speed-cluster">
-          <div class="nitro-gauge">
-            <span class="nitro-label">NITRO (SHIFT)</span>
-            <div class="nitro-track">
-              <div id="hud-nitro-bar" class="nitro-fill" style="width: 100%"></div>
-            </div>
+      <!-- NFS TACHOMETER & SPEEDOMETER CLUSTER -->
+      <div class="nfs-tachometer-cluster">
+        <!-- NOS Nitrous Tank -->
+        <div class="nos-gauge-wrap">
+          <div class="nos-header">
+            <span class="nos-flame-icon">🔥</span>
+            <span>NITROUS (SHIFT)</span>
           </div>
+          <div class="nos-track">
+            <div id="hud-nitro-bar" class="nos-fill" style="width: 100%;"></div>
+          </div>
+        </div>
 
-          <div class="speedometer-unit">
-            <span id="hud-gear" class="gear-val">3</span>
-            <div class="speed-number-wrap">
-              <span id="hud-speed" class="speed-val">0</span>
+        <!-- Circular Tachometer Dial -->
+        <div class="tacho-dial">
+          <svg class="tacho-svg" viewBox="0 0 200 200">
+            <!-- Background Arc -->
+            <circle class="dial-bg" cx="100" cy="100" r="82"></circle>
+            <!-- Redline Zone -->
+            <path class="dial-redline" d="M 158 42 A 82 82 0 0 1 178 120" fill="none" stroke="#ff0033" stroke-width="12"></path>
+            <!-- Dynamic RPM Needle -->
+            <line id="tacho-needle" class="dial-needle" x1="100" y1="100" x2="100" y2="28" transform="rotate(-120 100 100)"></line>
+            <!-- Center Cap -->
+            <circle class="dial-center" cx="100" cy="100" r="14"></circle>
+          </svg>
+
+          <!-- Inside Dial Digital Readouts -->
+          <div class="dial-center-content">
+            <span id="hud-gear" class="gear-badge">3</span>
+            <div class="speed-readout">
+              <span id="hud-speed" class="speed-num">0</span>
               <span class="speed-unit">KM/H</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Mobile Touch Controls Overlay -->
-      <div id="mobile-touch-controls" class="touch-controls-container">
-        <!-- Steering (Left / Right) -->
-        <div class="touch-cluster left">
+      <!-- Mobile Touch Controls -->
+      <div id="mobile-touch-controls" class="nfs-touch-layer">
+        <div class="touch-side left">
           <button id="touch-left" class="touch-btn steer">◀</button>
           <button id="touch-right" class="touch-btn steer">▶</button>
         </div>
-
-        <!-- Pedals (Brake, Gas, Nitro, Handbrake) -->
-        <div class="touch-cluster right">
-          <button id="touch-handbrake" class="touch-btn small handbrake">HANDBRAKE</button>
-          <button id="touch-nitro" class="touch-btn small nitro">NITRO</button>
+        <div class="touch-side right">
+          <button id="touch-nitro" class="touch-btn nos">NOS</button>
+          <button id="touch-handbrake" class="touch-btn ebrake">DRIFT</button>
           <button id="touch-brake" class="touch-btn brake">BRAKE</button>
           <button id="touch-gas" class="touch-btn gas">GAS</button>
         </div>
       </div>
     </div>
 
-    <!-- 10. RACE RESULTS SCREEN -->
-    <section id="screen-results" class="screen">
-      <div class="results-modal">
-        <div id="results-badge" class="results-badge victory">1ST PLACE — VICTORY!</div>
-        <h2 id="results-headline">CHAMPION OF THE TRACK</h2>
-
-        <!-- Streak Celebration Callout -->
-        <div id="results-streak-callout" class="streak-callout hidden">
-          <div class="streak-callout-icon">🏆</div>
-          <div class="streak-callout-content">
-            <h4 id="streak-callout-title">3-CONSECUTIVE-WIN STREAK COMPLETED!</h4>
-            <p id="streak-callout-desc">New Prototype Unlocked: Thunderbolt S added to your Garage!</p>
-          </div>
-        </div>
+    <!-- SCREEN 6: RESULTS SCREEN -->
+    <section id="screen-results" class="nfs-screen">
+      <div class="results-podium">
+        <div id="results-badge" class="podium-badge victory">1ST PLACE — VICTORY!</div>
+        <h2 id="results-headline">STREET KING OF THE NIGHT</h2>
 
         <!-- Track Unlock Celebration Callout -->
-        <div id="results-track-callout" class="streak-callout track-unlocked hidden">
-          <div class="streak-callout-icon">🏁</div>
-          <div class="streak-callout-content">
-            <h4 id="track-callout-title">NEW RACING LOCATION UNLOCKED!</h4>
-            <p id="track-callout-desc">Switzerland Meadows is now open for competition!</p>
+        <div id="results-track-callout" class="nfs-unlock-callout hidden">
+          <div class="callout-icon">🏁</div>
+          <div class="callout-info">
+            <h4 id="track-callout-title">NEW STREET CIRCUIT UNLOCKED!</h4>
+            <p id="track-callout-desc">Switzerland Meadows is now open for racing!</p>
           </div>
         </div>
 
-        <!-- Times & Stats Overview -->
-        <div class="results-summary-row">
-          <div class="summary-pill">
-            <span class="lbl">TOTAL TIME</span>
-            <span id="res-total-time" class="val">01:42.35</span>
+        <div class="results-stats-row">
+          <div class="res-stat-card">
+            <span class="stat-k">TOTAL TIME</span>
+            <span id="res-total-time" class="stat-v">01:42.35</span>
           </div>
-          <div class="summary-pill">
-            <span class="lbl">BEST LAP</span>
-            <span id="res-best-lap" class="val">00:33.41</span>
+          <div class="res-stat-card">
+            <span class="stat-k">BEST LAP</span>
+            <span id="res-best-lap" class="stat-v">00:33.41</span>
           </div>
-          <div class="summary-pill">
-            <span class="lbl">TOP SPEED</span>
-            <span id="res-top-speed" class="val">218 km/h</span>
+          <div class="res-stat-card">
+            <span class="stat-k">TOP SPEED</span>
+            <span id="res-top-speed" class="stat-v">234 KM/H</span>
           </div>
         </div>
 
-        <!-- Standings Table -->
         <div class="standings-table-wrap">
           <table class="standings-table">
             <thead>
               <tr>
                 <th>POS</th>
                 <th>RACER</th>
-                <th>CAR</th>
+                <th>MACHINE</th>
                 <th>TIME</th>
                 <th>GAP</th>
               </tr>
             </thead>
-            <tbody id="standings-tbody">
-              <!-- Injected dynamically -->
-            </tbody>
+            <tbody id="standings-tbody"></tbody>
           </table>
         </div>
 
-        <!-- Results Actions -->
         <div class="results-actions">
-          <button id="btn-replay-race" class="btn-action primary">RACE AGAIN</button>
-          <button id="btn-results-track" class="btn-action">SELECT TRACK</button>
-          <button id="btn-results-garage" class="btn-action">GARAGE</button>
-          <button id="btn-results-menu" class="btn-action">MAIN MENU</button>
+          <button id="btn-replay-race" class="nfs-btn-action primary">REPLAY RACE</button>
+          <button id="btn-results-track" class="nfs-btn-action">SELECT CIRCUIT</button>
+          <button id="btn-results-garage" class="nfs-btn-action">GARAGE</button>
+          <button id="btn-results-menu" class="nfs-btn-action">MAIN MENU</button>
         </div>
       </div>
     </section>
 
-    <!-- 11. PAUSE MODAL -->
+    <!-- PAUSE MODAL -->
     <div id="pause-modal" class="modal-overlay hidden">
-      <div class="modal-card">
+      <div class="nfs-modal-card">
         <h3>RACE PAUSED</h3>
-        <div class="modal-buttons">
-          <button id="btn-resume-race" class="btn-action primary">RESUME RACE</button>
-          <button id="btn-restart-race" class="btn-action">RESTART</button>
-          <button id="btn-pause-settings" class="btn-action">SETTINGS</button>
-          <button id="btn-quit-race" class="btn-action danger">QUIT TO MENU</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 12. FIREBASE AUTHENTICATION & CLOUD SAVE MODAL -->
-    <div id="auth-modal" class="modal-overlay hidden">
-      <div class="auth-card">
-        <button id="btn-close-auth" class="modal-close-btn">✕</button>
-        <div class="auth-header">
-          <span class="auth-badge">CLOUD PROGRESS SYNC</span>
-          <h3 id="auth-title">SIGN IN TO SPEED ORDER</h3>
-          <p id="auth-sub">Log in to save your unlocked cars, tracks, streaks, and records across any browser or device!</p>
-        </div>
-
-        <!-- User Logged In Profile View -->
-        <div id="auth-logged-in-view" class="auth-user-info hidden">
-          <div class="auth-avatar">🏎️</div>
-          <h4 id="auth-user-display-name">User</h4>
-          <span id="auth-user-email" class="auth-email-tag">user@example.com</span>
-          <div class="auth-sync-status">
-            <span>☁️ Cloud Sync Active (Auto-Saving to Firestore)</span>
-          </div>
-          <button id="btn-manual-sync" class="btn-action primary">SYNC NOW</button>
-          <button id="btn-auth-logout" class="btn-action danger">SIGN OUT</button>
-        </div>
-
-        <!-- Auth Form Tabs View -->
-        <div id="auth-form-view">
-          <div class="auth-tabs">
-            <button id="tab-login" class="auth-tab active">SIGN IN</button>
-            <button id="tab-register" class="auth-tab">CREATE ACCOUNT</button>
-          </div>
-
-          <form id="auth-form" class="auth-fields">
-            <div class="input-group">
-              <label for="auth-email">EMAIL ADDRESS</label>
-              <input type="email" id="auth-email" placeholder="racer@domain.com" required />
-            </div>
-
-            <div class="input-group">
-              <label for="auth-password">PASSWORD</label>
-              <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required />
-            </div>
-
-            <div id="auth-error-msg" class="auth-error hidden"></div>
-
-            <button type="submit" id="btn-auth-submit" class="btn-action primary">SIGN IN</button>
-          </form>
-
-          <div class="auth-divider"><span>OR</span></div>
-
-          <button id="btn-google-login" class="btn-action google-btn">
-            <span class="google-g">G</span> CONTINUE WITH GOOGLE
-          </button>
-
-          <div class="guest-notice">
-            <p>You can also play without logging in — your progress is safely saved locally on this browser.</p>
-            <button id="btn-continue-guest" class="link-btn">Continue as Guest</button>
-          </div>
+        <div class="modal-btn-list">
+          <button id="btn-resume-race" class="nfs-btn-action primary">RESUME</button>
+          <button id="btn-restart-race" class="nfs-btn-action">RESTART</button>
+          <button id="btn-pause-settings" class="nfs-btn-action">SETTINGS</button>
+          <button id="btn-quit-race" class="nfs-btn-action danger">QUIT TO MENU</button>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Vite Module Entry -->
+  <!-- Main Vite Module Entry -->
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

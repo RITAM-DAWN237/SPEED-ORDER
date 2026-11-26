@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="SPEED ORDER — Endless Highway Traffic Racer" width="100%" />
+  <img src="assets/banner.png" alt="SPEED ORDER — Endless Highway Traffic Racer" width="100%" />
 </p>
 
 <p align="center">

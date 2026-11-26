@@ -1,468 +1,737 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>NEED FOR SPEED: SPEED ORDER — Underground Web Arcade</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SPEED ORDER — RULE THE STREETS. OWN THE ROAD.</title>
+  <meta name="description"
+    content="SPEED ORDER is an underground semi-3D arcade street racing web game. Rule the streets, own the road." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css" />
 </head>
-<body class="nfs-theme">
-  <!-- 3D Canvas Mount -->
-  <div id="game-container">
-    <canvas id="game-canvas"></canvas>
-  </div>
 
-  <!-- Speed Motion Lines Overlay for NOS -->
-  <div id="nos-motion-overlay" class="nos-motion hidden"></div>
+<body>
+  <!-- 3D WebGL Canvas -->
+  <canvas id="webgl-canvas"></canvas>
 
-  <!-- Main UI Layer -->
-  <div id="ui-layer">
+  <!-- Audio Toggle Pill Button -->
+  <button id="audio-toggle-btn" class="audio-toggle-badge" aria-label="Toggle Sound">
+    <span class="icon">🔊</span>
+    <span class="label">AUDIO ON</span>
+  </button>
 
-    <!-- Top Status Bar -->
-    <header class="nfs-top-bar">
-      <div class="nfs-logo">
-        <span class="nfs-sub-title">EA STYLE ARCADE</span>
-        <div class="nfs-brand">
-          <span class="brand-italic">NEED FOR</span>
-          <span class="brand-bold">SPEED</span>
-          <span class="brand-edition">SPEED ORDER</span>
-        </div>
+  <!-- Main UI Container -->
+  <div id="ui-container">
+    <!-- Top Header -->
+    <header class="top-nav-bar">
+      <div class="brand-badge">
+        <span class="brand-order-tag">SPEED ORDER</span>
+        <span class="brand-order-num">V1.0</span>
       </div>
-      <div class="top-bar-right">
-        <button id="btn-sound-toggle" class="nfs-icon-btn" title="Toggle Sound">🔊</button>
-        <button id="btn-fullscreen-toggle" class="nfs-icon-btn" title="Fullscreen">⛶</button>
-        <span id="fps-counter" class="nfs-fps-badge">60 FPS</span>
+      <div class="player-profile-pill">
+        <div class="avatar-ring">SO</div>
+        <div class="profile-details">
+          <div class="pilot-name">HIGHWAY TRAVELER #01</div>
+          <div class="reputation-rating">
+            <span class="rep-label">REP:</span> <span id="stat-rep">1,450 XP</span> &bull;
+            <span class="cash-label">CASH:</span> <span id="stat-cash">$12,500</span>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- SCREEN 1: MAIN MENU -->
-    <section id="screen-main-menu" class="nfs-screen active">
-      <div class="menu-stage">
-        <div class="nfs-hero-box">
-          <div class="street-badge">ILLEGAL STREET RACING LEAGUE</div>
-          <h1 class="nfs-glitch-title">
-            <span class="title-top">NEED FOR SPEED</span>
-            <span class="title-bottom">SPEED ORDER</span>
-          </h1>
-          <p class="nfs-subtitle">Own the city streets. Drop the hammer, hit the NOS, and smoke the competition.</p>
-        </div>
-
-        <nav class="nfs-main-nav">
-          <button id="btn-quick-play" class="nfs-menu-btn primary">
-            <span class="btn-skew"></span>
-            <span class="btn-label"><span class="btn-arrow">▶</span> QUICK RACE</span>
-            <span class="btn-tag">INSTANT ACTION</span>
-          </button>
-
-          <button id="btn-track-select-menu" class="nfs-menu-btn" data-target="screen-track-select">
-            <span class="btn-skew"></span>
-            <span class="btn-label">🏁 STREET CIRCUITS</span>
-            <span class="btn-tag">7 TRACKS</span>
-          </button>
-
-          <button id="btn-garage-menu" class="nfs-menu-btn" data-target="screen-garage">
-            <span class="btn-skew"></span>
-            <span class="btn-label">🔧 THE GARAGE</span>
-            <span class="btn-tag">TUNER & SUPER</span>
-          </button>
-
-          <button id="btn-multiplayer-menu" class="nfs-menu-btn" data-target="screen-multiplayer">
-            <span class="btn-skew"></span>
-            <span class="btn-label">🌐 MULTIPLAYER</span>
-            <span class="btn-tag locked-tag">COMING SOON</span>
-          </button>
-
-          <button id="btn-settings-menu" class="nfs-menu-btn" data-target="screen-settings">
-            <span class="btn-skew"></span>
-            <span class="btn-label">⚙️ TUNING & SETTINGS</span>
-          </button>
-        </nav>
-
-        <div class="nfs-controls-hint">
-          <span>PC: <strong>W/A/S/D</strong> or <strong>ARROWS</strong> to Drive • <strong>SPACE</strong> Drift / Handbrake • <strong>SHIFT</strong> Nitrous Boost • <strong>C</strong> Camera</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCREEN 2: TRACK SELECTION -->
-    <section id="screen-track-select" class="nfs-screen">
-      <div class="nfs-screen-header">
-        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
-        <h2>STREET RACING CIRCUITS</h2>
-        <div class="header-decor"></div>
+    <section id="screen-main-menu" class="screen-view active">
+      <div class="hero-brand-container">
+        <div class="brand-kicker">ENDLESS HIGHWAY JOURNEY</div>
+        <h1 class="game-logo-title">SPEED<span class="accent-glow">ORDER</span></h1>
+        <div class="brand-tagline">RULE THE HIGHWAY. OWN THE JOURNEY.</div>
       </div>
 
-      <div class="track-grid" id="track-carousel">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="nfs-race-bar">
-        <div class="race-bar-item">
-          <label>DIFFICULTY:</label>
-          <div class="nfs-pill-group" id="difficulty-selector">
-            <button class="nfs-pill" data-difficulty="easy">ROOKIE</button>
-            <button class="nfs-pill active" data-difficulty="medium">PRO</button>
-            <button class="nfs-pill" data-difficulty="hard">OUTLAW</button>
-            <button class="nfs-pill legend" data-difficulty="legend">MOST WANTED</button>
-          </div>
-        </div>
-
-        <div class="race-bar-item">
-          <label>LAPS:</label>
-          <div class="nfs-pill-group" id="laps-selector">
-            <button class="nfs-pill" data-laps="1">1 LAP</button>
-            <button class="nfs-pill active" data-laps="3">3 LAPS</button>
-            <button class="nfs-pill" data-laps="5">5 LAPS</button>
-          </div>
-        </div>
-
-        <button id="btn-launch-race" class="nfs-btn-start">
-          <span>RACE NOW</span>
-          <span class="start-chevron">➔</span>
+      <nav class="main-menu-nav">
+        <button id="btn-nav-play" class="menu-btn primary-pulse" data-target="screen-play">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">START JOURNEY</span>
+          <span class="btn-subtext">ENDLESS HIGHWAY &bull; TRAFFIC RACER</span>
         </button>
+
+        <button id="btn-nav-garage" class="menu-btn" data-target="screen-garage">
+          <span class="btn-icon">🚗</span>
+          <span class="btn-text">GARAGE</span>
+          <span class="btn-subtext">360° VEHICLE SHOWCASE &bull; TUNING</span>
+        </button>
+
+        <button id="btn-nav-multiplayer" class="menu-btn online-badge-btn" data-target="screen-multiplayer">
+          <span class="btn-icon">🌐</span>
+          <span class="btn-text">MULTIPLAYER</span>
+          <span class="btn-badge">COMING SOON</span>
+        </button>
+
+        <button id="btn-nav-stats" class="menu-btn" data-target="screen-stats">
+          <span class="btn-icon">📊</span>
+          <span class="btn-text">STATISTICS</span>
+          <span class="btn-subtext">CAREER RECORDS &bull; TOP SPEEDS</span>
+        </button>
+
+        <button id="btn-nav-settings" class="menu-btn" data-target="screen-settings">
+          <span class="btn-icon">⚙️</span>
+          <span class="btn-text">SETTINGS</span>
+          <span class="btn-subtext">AUDIO &bull; CONTROLS &bull; GRAPHICS</span>
+        </button>
+      </nav>
+
+      <footer class="bottom-version-bar">
+        <span>THREE.JS R165 &bull; ORIGINAL ARCADE ENGINE</span>
+        <span class="copyright-note">SPEED ORDER &bull; ALL RIGHTS RESERVED</span>
+      </footer>
+    </section>
+
+    <!-- SCREEN 2: UNIFIED HIGHWAY JOURNEY -->
+    <section id="screen-play" class="screen-view">
+      <div class="screen-header">
+        <button class="back-btn" data-back="screen-main-menu"><span>←</span> BACK TO MENU</button>
+        <h2 class="section-title">UNIFIED CONTINUOUS HIGHWAY</h2>
+        <div class="garage-cash-display">
+          <span class="cash-lbl">YOUR CASH:</span>
+          <span class="cash-amt" id="map-player-cash">$15,000</span>
+        </div>
+      </div>
+
+      <!-- GAME MODE SELECTOR -->
+      <div class="game-mode-panel">
+        <span class="mode-panel-lbl">SELECT GAME MODE:</span>
+        <div class="game-mode-tabs">
+          <button class="mode-tab-btn active" data-mode="endless">
+            <span class="m-icon">🛣️</span>
+            <span class="m-name">ENDLESS</span>
+            <span class="m-sub">ONE-WAY</span>
+          </button>
+          <button class="mode-tab-btn" data-mode="two_way">
+            <span class="m-icon">⚡</span>
+            <span class="m-name">TWO-WAY</span>
+            <span class="m-sub">ONCOMING BONUS</span>
+          </button>
+          <button class="mode-tab-btn" data-mode="time_trial">
+            <span class="m-icon">⏱️</span>
+            <span class="m-name">TIME TRIAL</span>
+            <span class="m-sub">100s + OVERTIME</span>
+          </button>
+          <button class="mode-tab-btn" data-mode="free_ride">
+            <span class="m-icon">🏖️</span>
+            <span class="m-name">FREE RIDE</span>
+            <span class="m-sub">NO CRASH OVER</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SCORING TIPS BANNER -->
+      <div class="scoring-tips-ribbon">
+        <div class="tip-item">⚡ <strong>100+ KM/H OVERTAKE:</strong> Drive above 100 km/h and overtake civilian cars
+          closely for big bonus points & cash!</div>
+        <div class="tip-item">🔥 <strong>TWO-WAY ONCOMING:</strong> Drive in the left opposite lane in Two-Way mode for
+          continuous cash & score streaming!</div>
+        <div class="tip-item">🛡️ <strong>SAFE BUMP:</strong> Slow speed collisions (&lt; 48 km/h) won't end your
+          journey!</div>
+      </div>
+
+      <!-- UNIFIED HIGHWAY HERO & 5KM BIOME ROADMAP -->
+      <div class="unified-highway-card">
+        <div class="unified-hero-header">
+          <div class="unified-badge">★ CONTINUOUS INTERSTATE HIGHWAY ★</div>
+          <h3 class="unified-title">SEAMLESS 50 KM INDIAN EXPEDITION</h3>
+          <p class="unified-desc">
+            Drive continuously across one massive unified highway spanning 10 Indian states. Every <strong>5
+              kilometers</strong>, transition through mountain tunnels past iconic monuments, manage your fuel and nitro
+            at roadside pitstops, conquer all 10 states, and secure your vehicle inside the 50 KM Finish Garage!
+          </p>
+        </div>
+
+        <!-- 5KM BIOME ROADMAP TRACK -->
+        <div class="biome-roadmap-container">
+          <div class="roadmap-header">🏁 CONTINUOUS 5 KM INTERSTATE EXPEDITION TRACK:</div>
+          <div class="roadmap-track">
+            <div class="roadmap-step active">
+              <span class="step-dist">0 KM</span>
+              <span class="step-icon">🏡</span>
+              <span class="step-name">1. PUNJAB</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">5 KM</span>
+              <span class="step-icon">🏜️</span>
+              <span class="step-name">2. RAJASTHAN</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">10 KM</span>
+              <span class="step-icon">❄️</span>
+              <span class="step-name">3. HIMACHAL</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">15 KM</span>
+              <span class="step-icon">🌧️</span>
+              <span class="step-name">4. MEGHALAYA</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">20 KM</span>
+              <span class="step-icon">🌲</span>
+              <span class="step-name">5. ASSAM</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">25 KM</span>
+              <span class="step-icon">🍂</span>
+              <span class="step-name">6. KASHMIR</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">30 KM</span>
+              <span class="step-icon">🏙️</span>
+              <span class="step-name">7. MAHARASHTRA</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">35 KM</span>
+              <span class="step-icon">🌊</span>
+              <span class="step-name">8. GOA</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">40 KM</span>
+              <span class="step-icon">🌴</span>
+              <span class="step-name">9. KERALA</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step">
+              <span class="step-dist">45 KM</span>
+              <span class="step-icon">🕌</span>
+              <span class="step-name">10. UTTAR PRADESH</span>
+            </div>
+            <div class="roadmap-arrow">➔</div>
+            <div class="roadmap-step finish-step">
+              <span class="step-dist">50 KM</span>
+              <span class="step-icon">🏁</span>
+              <span class="step-name">FINISH GARAGE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAUNCH BUTTON -->
+        <div class="launch-hero-btn-box">
+          <button id="btn-start-race" class="action-btn primary-pulse btn-launch-unified" data-stage="1">
+            <span>▶ LAUNCH CONTINUOUS JOURNEY</span>
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- SCREEN 3: GARAGE -->
-    <section id="screen-garage" class="nfs-screen">
-      <div class="nfs-screen-header">
-        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
-        <h2>THE CHOP SHOP & GARAGE</h2>
-        <div class="header-decor"></div>
+    <!-- SCREEN 3: GARAGE & VEHICLE SHOWROOM (40+ CARS SLIDER SYSTEM) -->
+    <section id="screen-garage" class="screen-view">
+      <div class="screen-header">
+        <button class="back-btn" data-back="screen-main-menu"><span>←</span> BACK TO MENU</button>
+        <h2 class="section-title">GARAGE &amp; VEHICLE SHOWROOM</h2>
+        <div class="garage-cash-display">
+          <span class="cash-lbl">YOUR CASH:</span>
+          <span class="cash-amt" id="garage-player-cash">$15,000</span>
+        </div>
       </div>
 
-      <div class="garage-panel-wrap">
-        <div class="garage-card">
-          <div class="garage-card-top">
-            <span id="garage-car-tier" class="car-tier-pill">STREET TUNER</span>
-            <span id="garage-car-status" class="car-status-pill unlocked">UNLOCKED</span>
+      <div class="garage-deck">
+        <div class="car-spec-card">
+          <div class="spec-kicker">40+ VEHICLES &bull; CAROUSEL SLIDER</div>
+
+          <!-- Horizontal Carousel Slider Navigation -->
+          <div class="garage-slider-nav">
+            <button id="btn-garage-prev" class="slider-arrow-btn" aria-label="Previous Car">
+              <span>◀ PREV</span>
+            </button>
+            <div class="carousel-counter-badge" id="garage-car-counter">
+              CAR [ 1 / 42 ]
+            </div>
+            <button id="btn-garage-next" class="slider-arrow-btn" aria-label="Next Car">
+              <span>NEXT ▶</span>
+            </button>
           </div>
 
-          <h3 id="garage-car-name">NISSAN SKYLINE GT-R</h3>
-          <p id="garage-car-desc" class="car-bio">Twin-turbo AWD street monster. Legendary tuner machine.</p>
+          <!-- Quick Vehicle Scrub Slider -->
+          <div class="slider-scrub-row">
+            <input type="range" id="garage-car-slider" min="0" max="41" value="0" class="car-scrub-slider" />
+          </div>
 
-          <div class="garage-specs">
-            <div class="spec-col">
-              <span class="spec-k">POWER</span>
-              <span id="spec-power" class="spec-v">550 HP</span>
+          <h3 class="spec-car-name" id="garage-car-name">BREEZE HATCH</h3>
+          <div class="spec-class-badge" id="garage-car-class">COMPACT COMMUTER</div>
+          <div class="spec-price-status" id="garage-car-price-badge">✓ VEHICLE OWNED</div>
+
+          <div class="stat-bars">
+            <div class="stat-row">
+              <span class="stat-label">TOP SPEED</span>
+              <div class="bar-outer">
+                <div class="bar-fill" id="stat-bar-speed" style="width: 50%;"></div>
+              </div>
+              <span class="stat-val" id="stat-val-speed">170 KM/H</span>
             </div>
-            <div class="spec-col">
-              <span class="spec-k">ENGINE</span>
-              <span id="spec-engine" class="spec-v">2.6L RB26DETT</span>
+            <div class="stat-row">
+              <span class="stat-label">ACCELERATION</span>
+              <div class="bar-outer">
+                <div class="bar-fill" id="stat-bar-accel" style="width: 65%;"></div>
+              </div>
+              <span class="stat-val" id="stat-val-accel">5.2s</span>
             </div>
-            <div class="spec-col">
-              <span class="spec-k">DRIVE</span>
-              <span id="spec-drive" class="spec-v">ATTESA AWD</span>
+            <div class="stat-row">
+              <span class="stat-label">HANDLING</span>
+              <div class="bar-outer">
+                <div class="bar-fill" id="stat-bar-handling" style="width: 82%;"></div>
+              </div>
+              <span class="stat-val" id="stat-val-handling">82%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">RAM ARMOR</span>
+              <div class="bar-outer">
+                <div class="bar-fill" id="stat-bar-armor" style="width: 60%;"></div>
+              </div>
+              <span class="stat-val" id="stat-val-armor">60%</span>
             </div>
           </div>
 
-          <!-- Dynamic Stat Bars -->
-          <div class="nfs-stat-bars">
-            <div class="stat-line">
-              <div class="stat-meta"><span>TOP SPEED</span><strong id="stat-val-speed">215 KM/H</strong></div>
-              <div class="stat-bar"><div id="bar-speed" class="bar-inner" style="width: 70%"></div></div>
-            </div>
-            <div class="stat-line">
-              <div class="stat-meta"><span>ACCELERATION</span><strong id="stat-val-accel">30</strong></div>
-              <div class="stat-bar"><div id="bar-accel" class="bar-inner" style="width: 65%"></div></div>
-            </div>
-            <div class="stat-line">
-              <div class="stat-meta"><span>DRIFT HANDLING</span><strong id="stat-val-handling">0.92</strong></div>
-              <div class="stat-bar"><div id="bar-handling" class="bar-inner" style="width: 75%"></div></div>
-            </div>
-            <div class="stat-line">
-              <div class="stat-meta"><span>NITROUS CAPACITY</span><strong id="stat-val-nitro">110</strong></div>
-              <div class="stat-bar"><div id="bar-nitro" class="bar-inner nos-bar" style="width: 70%"></div></div>
+          <button id="btn-equip-car" class="action-btn" style="margin-bottom: 12px; width: 100%;">
+            <span>EQUIP FOR JOURNEY</span>
+          </button>
+
+          <!-- Paint Color Livery Picker -->
+          <div class="car-color-picker">
+            <span class="picker-label">PAINT LIVERY:</span>
+            <div class="swatches">
+              <button class="swatch active" data-color="0x3b82f6" style="background:#3b82f6;"
+                title="Electric Blue"></button>
+              <button class="swatch" data-color="0xd90429" style="background:#d90429;" title="Apex Red"></button>
+              <button class="swatch" data-color="0x00f0ff" style="background:#00f0ff;" title="Neon Cyan"></button>
+              <button class="swatch" data-color="0xf59e0b" style="background:#f59e0b;" title="Solar Gold"></button>
+              <button class="swatch" data-color="0x10b981" style="background:#10b981;" title="Emerald Green"></button>
+              <button class="swatch" data-color="0x8b5cf6" style="background:#8b5cf6;" title="Ultra Purple"></button>
+              <button class="swatch" data-color="0xffffff" style="background:#ffffff;" title="Hyper White"></button>
+              <button class="swatch" data-color="0x18181b" style="background:#18181b;"
+                title="Midnight Stealth"></button>
             </div>
           </div>
 
-          <!-- Underglow Neon Picker -->
-          <div class="neon-customizer">
-            <label>CHASSIS UNDERGLOW NEON:</label>
-            <div class="neon-colors">
-              <button class="neon-dot active" data-neon="#00f0ff" style="background: #00f0ff;"></button>
-              <button class="neon-dot" data-neon="#ff0055" style="background: #ff0055;"></button>
-              <button class="neon-dot" data-neon="#39ff14" style="background: #39ff14;"></button>
-              <button class="neon-dot" data-neon="#ffb703" style="background: #ffb703;"></button>
-              <button class="neon-dot" data-neon="#bf00ff" style="background: #bf00ff;"></button>
+          <!-- Wheel Rim Customization -->
+          <div class="wheel-customizer-box">
+            <span class="picker-label">WHEEL RIMS:</span>
+            <div class="wheel-rim-buttons">
+              <button class="rim-btn" data-rim="classic_steelie">STEELIE</button>
+              <button class="rim-btn active" data-rim="sport_5spoke">5-SPOKE</button>
+              <button class="rim-btn" data-rim="chrome_deepdish">CHROME</button>
+              <button class="rim-btn" data-rim="gold_tuner">GOLD JDM</button>
+              <button class="rim-btn" data-rim="white_rally">RALLY</button>
+              <button class="rim-btn" data-rim="cyber_disc">CYBER DISC</button>
             </div>
           </div>
-
-          <div id="garage-unlock-box" class="unlock-rule-box hidden">
-            <span>🔒 Win previous circuit to unlock this machine.</span>
-          </div>
-
-          <button id="btn-select-car" class="nfs-btn-action primary">SELECT THIS MACHINE</button>
         </div>
 
-        <!-- Carousel navigation -->
-        <div class="garage-car-switcher">
-          <button id="btn-prev-car" class="switcher-arrow">◀</button>
-          <span class="switcher-hint">DRAG TO ROTATE 360°</span>
-          <button id="btn-next-car" class="switcher-arrow">▶</button>
+        <div class="garage-camera-hint">
+          <span>DRAG ON VEHICLE TO ROTATE 360° &bull; SCROLL TO ZOOM</span>
         </div>
       </div>
     </section>
 
     <!-- SCREEN 4: MULTIPLAYER (COMING SOON) -->
-    <section id="screen-multiplayer" class="nfs-screen">
-      <div class="nfs-screen-header">
-        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
-        <h2>ONLINE STREET MULTIPLAYER</h2>
-        <div class="header-decor"></div>
+    <section id="screen-multiplayer" class="screen-view">
+      <div class="screen-header">
+        <button class="back-btn" data-back="screen-main-menu"><span>←</span> BACK TO MENU</button>
+        <h2 class="section-title">ONLINE MULTIPLAYER</h2>
       </div>
 
-      <div class="coming-soon-stage">
-        <div class="coming-soon-card">
-          <div class="cs-badge">SEASON 2 EXPANSION</div>
-          <h1 class="cs-title">COMING SOON....</h1>
-          <p class="cs-desc">Online Street Crews, 1v1 Pink Slip Duels, Real-Time Cop Pursuits and Global Underground Leaderboards are currently under active development.</p>
-          
-          <div class="cs-features-grid">
-            <div class="cs-feature">
-              <span class="cs-icon">🏎️ 1V1</span>
-              <h4>PINK SLIP DUELS</h4>
-              <p>Bet your ride against online rivals in high-stakes head-to-head sprints.</p>
+      <div class="coming-soon-container">
+        <div class="multiplayer-spotlight">
+          <div class="lock-icon-ring">
+            <span class="huge-lock">🔒</span>
+          </div>
+          <div class="status-pill-soon">COMING SOON</div>
+          <h3 class="multiplayer-headline">RULE THE STREETS TOGETHER</h3>
+          <p class="multiplayer-lead">
+            Get ready to challenge your friends and top highway drivers worldwide. Online multiplayer journeys are
+            coming soon to <strong>SPEED ORDER</strong>.
+          </p>
+          <div class="multiplayer-features-preview">
+            <div class="feature-bullet">
+              <span class="f-icon">🏁</span>
+              <div class="f-text">
+                <strong>Real-Time Highway Battles</strong>
+                <span>8-Player synchronized arcade highway journeys</span>
+              </div>
             </div>
-            <div class="cs-feature">
-              <span class="cs-icon">🚨 COP</span>
-              <h4>HEAT PURSUIT</h4>
-              <p>Evade spike strips, road blocks and police helicopters with your crew.</p>
+            <div class="feature-bullet">
+              <span class="f-icon">⚡</span>
+              <div class="f-text">
+                <strong>Highway Crews</strong>
+                <span>Form highway clubs and conquer district leaderboards</span>
+              </div>
             </div>
-            <div class="cs-feature">
-              <span class="cs-icon">🌐 CREWS</span>
-              <h4>ONLINE CREW WARS</h4>
-              <p>Form street racing syndicates and dominate city turf on the live world map.</p>
-            </div>
-          </div>
-
-          <div class="cs-action-row">
-            <button class="nfs-btn-action primary" data-target="screen-track-select">PLAY SINGLE PLAYER IN THE MEANTIME</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCREEN 5: SETTINGS -->
-    <section id="screen-settings" class="nfs-screen">
-      <div class="nfs-screen-header">
-        <button class="nfs-btn-back" data-target="screen-main-menu">◀ BACK TO MENU</button>
-        <h2>AUDIO & DISPLAY TUNING</h2>
-        <div class="header-decor"></div>
-      </div>
-
-      <div class="nfs-settings-container">
-        <div class="settings-card">
-          <h3>AUDIO MIXER</h3>
-          <div class="setting-slider-row">
-            <label>Master Volume</label>
-            <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="0.8" />
-            <span id="lbl-master-vol">80%</span>
-          </div>
-          <div class="setting-slider-row">
-            <label>Engine & NOS FX</label>
-            <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="0.85" />
-            <span id="lbl-sfx-vol">85%</span>
-          </div>
-          <div class="setting-slider-row">
-            <label>Underground Synth Beats</label>
-            <input type="range" id="setting-music-vol" min="0" max="1" step="0.05" value="0.6" />
-            <span id="lbl-music-vol">60%</span>
-          </div>
-        </div>
-
-        <div class="settings-card">
-          <h3>GRAPHICS QUALITY</h3>
-          <div class="setting-toggle-row">
-            <label>Shader Quality</label>
-            <div class="nfs-pill-group" id="setting-quality-group">
-              <button class="nfs-pill" data-quality="low">LOW</button>
-              <button class="nfs-pill" data-quality="medium">MEDIUM</button>
-              <button class="nfs-pill active" data-quality="high">ULTRA</button>
-            </div>
-          </div>
-          <div class="setting-toggle-row">
-            <label>Camera Perspective</label>
-            <div class="nfs-pill-group" id="setting-camera-group">
-              <button class="nfs-pill active" data-cam="close">CHASE CLOSE</button>
-              <button class="nfs-pill" data-cam="far">CHASE FAR</button>
-              <button class="nfs-pill" data-cam="hood">HOOD CAM</button>
+            <div class="feature-bullet">
+              <span class="f-icon">🔥</span>
+              <div class="f-text">
+                <strong>Wager & Duels</strong>
+                <span>Put reputation and custom tuned rides on the line</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- IN-GAME RACING HUD (NFS TACHOMETER STYLE) -->
-    <div id="racing-hud" class="nfs-hud hidden">
-      <!-- Top HUD: Position, Lap, Timer -->
-      <div class="hud-top-bar">
-        <div class="hud-stat-box pos-box">
-          <span class="hud-tag">POSITION</span>
-          <div class="stat-digits">
-            <span id="hud-pos-main" class="hud-val-huge">1</span>
-            <span id="hud-pos-total" class="hud-val-sub">/6</span>
-          </div>
-        </div>
-
-        <div class="hud-stat-box lap-box">
-          <span class="hud-tag">LAP</span>
-          <div class="stat-digits">
-            <span id="hud-lap-cur" class="hud-val-huge">1</span>
-            <span id="hud-lap-total" class="hud-val-sub">/3</span>
-          </div>
-        </div>
-
-        <div class="hud-stat-box timer-box">
-          <div class="time-line"><span class="hud-tag">TIME:</span> <span id="hud-race-time" class="time-str">00:00.00</span></div>
-          <div class="time-line best"><span class="hud-tag">BEST:</span> <span id="hud-best-lap" class="time-str">--:--.--</span></div>
-        </div>
-
-        <button id="btn-pause-race" class="hud-pause-btn" title="Pause Game">⏸</button>
+    <!-- SCREEN 6: STATISTICS -->
+    <section id="screen-stats" class="screen-view">
+      <div class="screen-header">
+        <button class="back-btn" data-back="screen-main-menu"><span>←</span> BACK TO MENU</button>
+        <h2 class="section-title">DRIVER STATISTICS</h2>
       </div>
 
-      <!-- Drift Points Banner (Shows when drifting!) -->
-      <div id="drift-score-box" class="drift-score-box hidden">
-        <span class="drift-label">DRIFT</span>
-        <span id="drift-pts" class="drift-number">+450</span>
-      </div>
-
-      <!-- Minimap Radar -->
-      <div class="hud-radar-wrap">
-        <canvas id="minimap-canvas" width="160" height="160"></canvas>
-      </div>
-
-      <!-- Starting Countdown (3 -> 2 -> 1 -> GO!) -->
-      <div id="hud-countdown" class="nfs-countdown hidden">
-        <span id="countdown-number">3</span>
-      </div>
-
-      <!-- NFS TACHOMETER & SPEEDOMETER CLUSTER -->
-      <div class="nfs-tachometer-cluster">
-        <!-- NOS Nitrous Tank -->
-        <div class="nos-gauge-wrap">
-          <div class="nos-header">
-            <span class="nos-flame-icon">🔥</span>
-            <span>NITROUS (SHIFT)</span>
-          </div>
-          <div class="nos-track">
-            <div id="hud-nitro-bar" class="nos-fill" style="width: 100%;"></div>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <span class="st-icon">🏁</span>
+          <span class="st-num" id="stat-races-entered">0</span>
+          <span class="st-lbl">JOURNEYS ENTERED</span>
         </div>
-
-        <!-- Circular Tachometer Dial -->
-        <div class="tacho-dial">
-          <svg class="tacho-svg" viewBox="0 0 200 200">
-            <!-- Background Arc -->
-            <circle class="dial-bg" cx="100" cy="100" r="82"></circle>
-            <!-- Redline Zone -->
-            <path class="dial-redline" d="M 158 42 A 82 82 0 0 1 178 120" fill="none" stroke="#ff0033" stroke-width="12"></path>
-            <!-- Dynamic RPM Needle -->
-            <line id="tacho-needle" class="dial-needle" x1="100" y1="100" x2="100" y2="28" transform="rotate(-120 100 100)"></line>
-            <!-- Center Cap -->
-            <circle class="dial-center" cx="100" cy="100" r="14"></circle>
-          </svg>
-
-          <!-- Inside Dial Digital Readouts -->
-          <div class="dial-center-content">
-            <span id="hud-gear" class="gear-badge">3</span>
-            <div class="speed-readout">
-              <span id="hud-speed" class="speed-num">0</span>
-              <span class="speed-unit">KM/H</span>
-            </div>
-          </div>
+        <div class="stat-tile">
+          <span class="st-icon">🥇</span>
+          <span class="st-num" id="stat-races-won">0</span>
+          <span class="st-lbl">SUCCESSFUL RUNS</span>
         </div>
-      </div>
-
-      <!-- Mobile Touch Controls -->
-      <div id="mobile-touch-controls" class="nfs-touch-layer">
-        <div class="touch-side left">
-          <button id="touch-left" class="touch-btn steer">◀</button>
-          <button id="touch-right" class="touch-btn steer">▶</button>
+        <div class="stat-tile">
+          <span class="st-icon">⚡</span>
+          <span class="st-num" id="stat-top-speed">0 <small>KM/H</small></span>
+          <span class="st-lbl">TOP SPEED RECORD</span>
         </div>
-        <div class="touch-side right">
-          <button id="touch-nitro" class="touch-btn nos">NOS</button>
-          <button id="touch-handbrake" class="touch-btn ebrake">DRIFT</button>
-          <button id="touch-brake" class="touch-btn brake">BRAKE</button>
-          <button id="touch-gas" class="touch-btn gas">GAS</button>
+        <div class="stat-tile">
+          <span class="st-icon">💨</span>
+          <span class="st-num" id="stat-total-drift">0 <small>M</small></span>
+          <span class="st-lbl">TOTAL DRIFT DISTANCE</span>
         </div>
-      </div>
-    </div>
-
-    <!-- SCREEN 6: RESULTS SCREEN -->
-    <section id="screen-results" class="nfs-screen">
-      <div class="results-podium">
-        <div id="results-badge" class="podium-badge victory">1ST PLACE — VICTORY!</div>
-        <h2 id="results-headline">STREET KING OF THE NIGHT</h2>
-
-        <!-- Track Unlock Celebration Callout -->
-        <div id="results-track-callout" class="nfs-unlock-callout hidden">
-          <div class="callout-icon">🏁</div>
-          <div class="callout-info">
-            <h4 id="track-callout-title">NEW STREET CIRCUIT UNLOCKED!</h4>
-            <p id="track-callout-desc">Switzerland Meadows is now open for racing!</p>
-          </div>
+        <div class="stat-tile">
+          <span class="st-icon">🔥</span>
+          <span class="st-num" id="stat-nitro-used">0 <small>SEC</small></span>
+          <span class="st-lbl">NITROUS BURNED</span>
         </div>
-
-        <div class="results-stats-row">
-          <div class="res-stat-card">
-            <span class="stat-k">TOTAL TIME</span>
-            <span id="res-total-time" class="stat-v">01:42.35</span>
-          </div>
-          <div class="res-stat-card">
-            <span class="stat-k">BEST LAP</span>
-            <span id="res-best-lap" class="stat-v">00:33.41</span>
-          </div>
-          <div class="res-stat-card">
-            <span class="stat-k">TOP SPEED</span>
-            <span id="res-top-speed" class="stat-v">234 KM/H</span>
-          </div>
-        </div>
-
-        <div class="standings-table-wrap">
-          <table class="standings-table">
-            <thead>
-              <tr>
-                <th>POS</th>
-                <th>RACER</th>
-                <th>MACHINE</th>
-                <th>TIME</th>
-                <th>GAP</th>
-              </tr>
-            </thead>
-            <tbody id="standings-tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="results-actions">
-          <button id="btn-replay-race" class="nfs-btn-action primary">REPLAY RACE</button>
-          <button id="btn-results-track" class="nfs-btn-action">SELECT CIRCUIT</button>
-          <button id="btn-results-garage" class="nfs-btn-action">GARAGE</button>
-          <button id="btn-results-menu" class="nfs-btn-action">MAIN MENU</button>
+        <div class="stat-tile">
+          <span class="st-icon">💰</span>
+          <span class="st-num" id="stat-career-cash">$12,500</span>
+          <span class="st-lbl">CAREER EARNINGS</span>
         </div>
       </div>
     </section>
 
-    <!-- PAUSE MODAL -->
-    <div id="pause-modal" class="modal-overlay hidden">
-      <div class="nfs-modal-card">
-        <h3>RACE PAUSED</h3>
-        <div class="modal-btn-list">
-          <button id="btn-resume-race" class="nfs-btn-action primary">RESUME</button>
-          <button id="btn-restart-race" class="nfs-btn-action">RESTART</button>
-          <button id="btn-pause-settings" class="nfs-btn-action">SETTINGS</button>
-          <button id="btn-quit-race" class="nfs-btn-action danger">QUIT TO MENU</button>
+    <!-- SCREEN 7: SETTINGS -->
+    <section id="screen-settings" class="screen-view">
+      <div class="screen-header">
+        <button class="back-btn" data-back="screen-main-menu"><span>←</span> BACK TO MENU</button>
+        <h2 class="section-title">SYSTEM SETTINGS</h2>
+      </div>
+
+      <div class="settings-container">
+        <!-- Audio Settings -->
+        <div class="settings-group">
+          <h3 class="group-title">AUDIO CONTROLS</h3>
+          <div class="setting-item">
+            <div class="setting-labels">
+              <span class="name">MASTER VOLUME</span>
+              <span class="val-display" id="val-master-volume">80%</span>
+            </div>
+            <input type="range" id="setting-master-volume" min="0" max="100" value="80" class="range-slider" />
+          </div>
+          <div class="setting-item">
+            <div class="setting-labels">
+              <span class="name">MUSIC VOLUME</span>
+              <span class="val-display" id="val-music-volume">75%</span>
+            </div>
+            <input type="range" id="setting-music-volume" min="0" max="100" value="75" class="range-slider" />
+          </div>
+          <div class="setting-item">
+            <div class="setting-labels">
+              <span class="name">SOUND EFFECTS (SFX)</span>
+              <span class="val-display" id="val-sfx-volume">85%</span>
+            </div>
+            <input type="range" id="setting-sfx-volume" min="0" max="100" value="85" class="range-slider" />
+          </div>
+        </div>
+
+        <!-- Controls Legend -->
+        <div class="settings-group">
+          <h3 class="group-title">DRIVING CONTROLS</h3>
+          <div class="controls-legend-card">
+            <div class="legend-col"><span class="key-pill">W / ↑</span><span class="desc">ACCELERATE</span></div>
+            <div class="legend-col"><span class="key-pill">S / ↓</span><span class="desc">BRAKE / REVERSE</span></div>
+            <div class="legend-col"><span class="key-pill">A / ←</span><span class="desc">STEER LEFT</span></div>
+            <div class="legend-col"><span class="key-pill">D / →</span><span class="desc">STEER RIGHT</span></div>
+            <div class="legend-col"><span class="key-pill">SPACE</span><span class="desc">HANDBRAKE DRIFT</span></div>
+            <div class="legend-col"><span class="key-pill">SHIFT / N</span><span class="desc">NITROUS BOOST</span></div>
+          </div>
         </div>
       </div>
-    </div>
-
+    </section>
   </div>
 
-  <!-- Main Vite Module Entry -->
+  <!-- TRAFFIC RACER HUD -->
+  <div id="racing-hud" class="hud-overlay" style="display: none;">
+    <!-- Top Bar -->
+    <div class="tr-top-bar">
+      <!-- Score Top Left (Gold embossed font matching screenshot) -->
+      <div class="tr-score-box">
+        <div class="tr-lbl">SCORE</div>
+        <div class="tr-val gold" id="tr-hud-score">0</div>
+      </div>
+
+      <!-- 3 Lives / Chances Counter -->
+      <div class="tr-lives-box" id="tr-hud-lives-box">
+        <div class="tr-lbl">LIVES</div>
+        <div class="tr-lives-icons" id="tr-hud-lives">
+          <span class="life-heart active">❤️</span>
+          <span class="life-heart active">❤️</span>
+          <span class="life-heart active">❤️</span>
+        </div>
+      </div>
+
+      <!-- Fuel Gauge Bar -->
+      <div class="tr-fuel-box" id="tr-hud-fuel-box">
+        <div class="tr-lbl-row">
+          <span class="tr-lbl">⛽ FUEL</span>
+          <span class="tr-fuel-pct" id="tr-hud-fuel-pct">100%</span>
+        </div>
+        <div class="tr-fuel-bar-track">
+          <div class="tr-fuel-bar-fill" id="tr-hud-fuel-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Nitro Inventory (Max 2, 5s burn) -->
+      <div class="tr-nitro-box" id="tr-hud-nitro-box">
+        <div class="tr-lbl-row">
+          <span class="tr-lbl">🔥 NITRO</span>
+          <span class="tr-nitro-count" id="tr-hud-nitro-count">1/2</span>
+        </div>
+        <div class="tr-nitro-icons" id="tr-hud-nitro-icons">
+          <span class="nitro-can active" id="nitro-slot-1">🔥</span>
+          <span class="nitro-can empty" id="nitro-slot-2">⭕</span>
+        </div>
+      </div>
+
+      <!-- Mode & Indian State Biome Pill Center -->
+      <div class="hud-center-pill-box">
+        <div class="hud-pills-row">
+          <div id="tr-hud-mode-pill" class="hud-mode-pill">ENDLESS</div>
+          <div id="tr-hud-biome-pill" class="hud-biome-pill">MAP 01 • PUNJAB (0.0 / 5.0 KM)</div>
+        </div>
+        <div id="hud-wrong-way-alert" class="hud-wrong-way-badge" style="display: none;">⚡ OPPOSITE LANE BONUS: +$15/s
+        </div>
+      </div>
+
+      <!-- Top Right Corner: Small Map & Pause Button -->
+      <div class="tr-top-right-group">
+        <!-- Small Route Map Top Right Corner -->
+        <div class="tr-minimap-card" id="tr-hud-minimap-card">
+          <div class="tr-minimap-header">
+            <span class="tr-minimap-title">ROUTE MAP</span>
+            <span class="tr-minimap-dest-label" id="tr-minimap-dest-dist">50.0 KM DEST</span>
+          </div>
+          <div class="tr-minimap-canvas-wrap">
+            <canvas id="tr-minimap-canvas" width="168" height="38"></canvas>
+          </div>
+          <div class="tr-minimap-legend">
+            <span class="legend-item"><span class="legend-dot player">●</span> YOU</span>
+            <span class="legend-item"><span class="legend-line">―</span> ROUTE</span>
+            <span class="legend-item"><span class="legend-dot dest">🏁</span> DEST</span>
+          </div>
+        </div>
+
+        <!-- Pause Button Top Right -->
+        <button id="btn-hud-pause" class="tr-pause-btn" aria-label="Pause Race">⏸</button>
+      </div>
+    </div>
+
+    <!-- Right Side Stats (Speed, Distance, & Time Trial Countdown) -->
+    <div class="tr-right-stats">
+      <div id="tr-box-timer" class="tr-stat-block" style="display: none;">
+        <div class="tr-lbl">TIME REMAINING</div>
+        <div class="tr-val gold"><span id="tr-hud-timer">100.0</span> <small>SEC</small></div>
+      </div>
+      <div class="tr-stat-block">
+        <div class="tr-lbl">SPEED</div>
+        <div class="tr-val gold"><span id="tr-hud-speed">0</span> <small>KMH</small></div>
+      </div>
+      <div class="tr-stat-block">
+        <div class="tr-lbl">DISTANCE</div>
+        <div class="tr-val gold"><span id="tr-hud-dist">0.00</span> <small>KM</small></div>
+      </div>
+    </div>
+
+    <!-- FLOATING CAMERA / SCREENSHOT CAPTURE BUTTON FOR ADS & CREATORS -->
+    <div id="hud-camera-capture" style="position: fixed; top: 18px; right: 280px; z-index: 9999; display: flex; gap: 8px;">
+      <button id="btn-quick-screenshot" class="action-btn" style="padding: 6px 12px; font-size: 0.78rem; background: rgba(15, 23, 42, 0.85); border: 1px solid #ffd200; color: #ffd200; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 6px;" title="Capture Clean Ad Screenshot to screenshots/ folder">
+        <span>📸 TAKE AD SCREENSHOT</span>
+      </button>
+    </div>
+
+    <!-- Center Callout (Close Overtake / Nitro Ram) -->
+    <div id="hud-drift-status" class="tr-callout">CLOSE OVERTAKE! +100 PTS</div>
+
+    <!-- 1 KM Refueling & Nitro Pitstop Interactive Prompt -->
+    <div id="hud-station-prompt" class="hud-station-card" style="display: none;">
+      <div class="station-header">
+        <span class="st-icon">⛽</span>
+        <div class="st-info">
+          <div class="st-name">1 KM HIGHWAY PITSTOP &amp; FUEL STATION</div>
+          <div class="st-sub">PULL OVER OR TAP BELOW TO SERVICE VEHICLE</div>
+        </div>
+      </div>
+      <div class="station-actions">
+        <button id="btn-service-refuel" class="station-act-btn fuel-btn">
+          <span class="btn-main">⛽ REFUEL TANK (100%)</span>
+          <span class="btn-sub">COST: $100 [KEY: E]</span>
+        </button>
+        <button id="btn-service-nitro" class="station-act-btn nitro-btn">
+          <span class="btn-main">🔥 BUY NITRO CAN (5S)</span>
+          <span class="btn-sub">COST: $300 (MAX 2) [KEY: B]</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pause Menu Modal (Resume, Restart, Main Menu) -->
+    <div id="hud-pause-modal" class="tr-gameover-modal" style="display: none;">
+      <div class="tr-gameover-card pause-card">
+        <h2 class="tr-go-title gold">PAUSED</h2>
+        <div class="tr-go-stats">
+          <div class="tr-go-row">
+            <span>STATE LOCATION</span>
+            <strong id="pause-location" class="gold">PUNJAB</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>DISTANCE COVERED</span>
+            <strong id="pause-dist" class="gold">0.00 KM</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>CURRENT SCORE</span>
+            <strong id="pause-score" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>FUEL LEVEL</span>
+            <strong id="pause-fuel" class="green">100%</strong>
+          </div>
+        </div>
+        <div class="tr-go-actions tr-pause-actions">
+          <button id="btn-pause-resume" class="action-btn primary-pulse">▶ RESUME</button>
+          <button id="btn-pause-restart" class="action-btn secondary">🔄 RESTART</button>
+          <button id="btn-pause-menu" class="action-btn secondary">🏠 MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Traffic Racer Game Over Modal -->
+    <div id="hud-gameover-banner" class="tr-gameover-modal" style="display: none;">
+      <div class="tr-gameover-card">
+        <h2 class="tr-go-title">JOURNEY OVER</h2>
+        <div class="tr-go-stats">
+          <div class="tr-go-row">
+            <span>TOTAL SCORE</span>
+            <strong id="go-final-score" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>DISTANCE</span>
+            <strong id="go-final-dist" class="gold">0.00 KM</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>CLOSE OVERTAKES</span>
+            <strong id="go-final-overtakes" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row highlight">
+            <span>CASH EARNED</span>
+            <strong id="go-final-cash" class="green">+$0</strong>
+          </div>
+        </div>
+        <div class="tr-go-actions">
+          <button id="btn-tr-retry" class="action-btn primary-pulse">PLAY AGAIN</button>
+          <button id="btn-victory-continue" class="action-btn secondary">GARAGE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAND VICTORY MODAL (50 KM FINISH GARAGE) -->
+    <div id="hud-victory-banner" class="tr-gameover-modal" style="display: none;">
+      <div class="tr-gameover-card victory-card">
+        <div class="victory-trophy">🏆</div>
+        <h2 class="tr-go-title gold">EXPEDITION COMPLETED!</h2>
+        <div class="victory-banner-badge">★ GARAGE DOORS CLOSED • EXPEDITION CONQUERED ★</div>
+        <p class="victory-sub">You conquered 50 KM of highway through all 10 states, entered the grand garage, and the
+          garage doors have closed!</p>
+        <div class="tr-go-stats">
+          <div class="tr-go-row">
+            <span>NO. OF OVERTAKES</span>
+            <strong id="vic-final-overtakes" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>REFUELING COUNT</span>
+            <strong id="vic-final-refuels" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>NITROS USED</span>
+            <strong id="vic-final-nitros" class="gold">0</strong>
+          </div>
+          <div class="tr-go-row highlight">
+            <span>TOTAL CASH EARNED</span>
+            <strong id="vic-final-cash" class="green">+$0</strong>
+          </div>
+          <div class="tr-go-row">
+            <span>TIME TAKEN</span>
+            <strong id="vic-final-time" class="gold">00:00</strong>
+          </div>
+        </div>
+        <div class="tr-go-actions">
+          <button id="btn-vic-exit" class="action-btn primary-pulse">EXIT TO MENU</button>
+          <button id="btn-vic-play-again" class="action-btn secondary">PLAY AGAIN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Pedal Controls (matching screenshot) -->
+    <div class="tr-pedals-bar">
+      <!-- Brake Pedal Bottom Left -->
+      <div class="pedal-wrapper left">
+        <button id="touch-brake" class="tr-pedal brake-pedal" aria-label="Brake">
+          <div class="pedal-grip">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <div class="pedal-text">BRAKE</div>
+        </button>
+      </div>
+
+      <!-- Steering helper buttons -->
+      <div class="tr-steer-buttons">
+        <button id="touch-steer-left" class="tr-steer-btn" aria-label="Steer Left">◀</button>
+        <button id="touch-nitro" class="tr-steer-btn nitro-btn-pedal" aria-label="Nitro Boost">🔥</button>
+        <button id="touch-steer-right" class="tr-steer-btn" aria-label="Steer Right">▶</button>
+      </div>
+
+      <!-- Gas Pedal Bottom Right -->
+      <div class="pedal-wrapper right">
+        <button id="touch-throttle" class="tr-pedal gas-pedal" aria-label="Gas Accelerator">
+          <div class="pedal-grip vertical">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <div class="pedal-text">GAS</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Entry -->
   <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>

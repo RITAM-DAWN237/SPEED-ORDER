@@ -1,274 +1,349 @@
-/**
- * main.js - Application Entry Point for Need for Speed: Speed Order.
- * Initializes Three.js WebGL renderer, showroom, race engine, and UI lifecycle.
- */
-
 import * as THREE from 'three';
-import { storage } from './core/Storage.js';
-import { audio } from './core/Audio.js';
-import { input } from './core/Input.js';
+import { MenuScene } from './scenes/MenuScene.js';
+import { RaceScene } from './racing/RaceScene.js';
 import { UIManager } from './ui/UIManager.js';
-import { TrackManager } from './tracks/TrackManager.js';
-import { RaceEngine } from './game/RaceEngine.js';
-import { Vehicle } from './game/Vehicle.js';
-import { CARS, getCarById } from './game/CarCatalog.js';
+import { audio } from './core/Audio.js';
 
-class GameApp {
-  constructor() {
-    this.canvas = document.getElementById('game-canvas');
-    this.container = document.getElementById('game-container');
-
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-
-    this.trackManager = null;
-    this.raceEngine = null;
-    this.ui = null;
-
-    // Showroom / Garage inspection
-    this.garageVehicle = null;
-    this.isDraggingGarage = false;
-    this.garageDragStartX = 0;
-
-    // Cinematic menu state
-    this.menuAngle = 0;
-    this.isPaused = false;
-
-    // Performance & FPS tracking
-    this.lastTime = performance.now();
-    this.frameCount = 0;
-    this.lastFpsUpdate = 0;
-
-    this.init();
+/**
+ * Main Application Orchestrator for SPEED ORDER
+ */
+function boot() {
+  const canvas = document.getElementById('webgl-canvas');
+  if (!canvas) {
+    console.error('Fatal: #webgl-canvas element not found');
+    return;
   }
 
-  init() {
-    // 1. Setup Three.js WebGL Renderer
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 2000);
+  // 1. High-Performance Three.js Renderer — Crisp Semi-3D Retro Arcade Engine
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    powerPreference: 'high-performance',
+    stencil: false,
+    depth: true,
+  });
 
-    const quality = storage.settings.graphicsQuality || 'high';
-    const antialias = quality !== 'low';
+  const resizeRenderer = () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+  };
 
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias,
-      powerPreference: 'high-performance'
+  resizeRenderer();
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.12;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // 2. Initialize Scenes
+  const menuScene = new MenuScene(canvas);
+  const raceScene = new RaceScene(canvas);
+
+  let currentActiveScene = 'menu';
+
+  // 3. Initialize UI & Event Manager
+  const uiManager = new UIManager(menuScene, renderer);
+
+  // Auto-unlock Web Audio on first user interaction anywhere on page
+  const unlockAudioGesture = () => {
+    audio.unlockAudio();
+    window.removeEventListener('click', unlockAudioGesture);
+    window.removeEventListener('keydown', unlockAudioGesture);
+    window.removeEventListener('touchstart', unlockAudioGesture);
+  };
+  window.addEventListener('click', unlockAudioGesture);
+  window.addEventListener('keydown', unlockAudioGesture);
+  window.addEventListener('touchstart', unlockAudioGesture);
+
+  // Hook Start Race Button & Unified Journey Launcher
+  const racingHud = document.getElementById('racing-hud');
+  const uiContainer = document.getElementById('ui-container');
+
+  const launchJourney = (stage = 1) => {
+    console.log(`⚡ Launching SPEED ORDER Highway Journey (Map ${stage})...`);
+    currentActiveScene = 'race';
+    uiContainer.style.display = 'none';
+    if (racingHud) racingHud.style.display = 'flex';
+    raceScene.startRace(stage);
+  };
+
+  uiManager.onLaunchJourney = launchJourney;
+
+  // Pause / Resume / Exit Race
+  const btnPause = document.getElementById('btn-hud-pause');
+  const returnToMenu = () => {
+    console.log('⚡ Returning to Menu...');
+    currentActiveScene = 'menu';
+    raceScene.stopRace();
+    if (racingHud) racingHud.style.display = 'none';
+    uiContainer.style.display = 'flex';
+    uiManager.showScreen('screen-main-menu');
+  };
+
+  if (btnPause) {
+    btnPause.addEventListener('click', () => {
+      if (currentActiveScene === 'race') {
+        if (raceScene.isPaused) {
+          raceScene.resumeGame();
+        } else {
+          raceScene.pauseGame();
+        }
+      }
     });
+  }
 
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 2 : 1) * (storage.settings.resolutionScale || 1.0));
-    this.renderer.shadowMap.enabled = quality !== 'low';
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    // 2. Setup Managers
-    this.trackManager = new TrackManager(this.scene);
-    this.ui = new UIManager(this);
-    this.raceEngine = new RaceEngine(this.scene, this.camera, this.ui, this.trackManager);
-
-    // 3. Bind Touch Controls
-    input.bindTouchControls({
-      btnLeft: document.getElementById('touch-left'),
-      btnRight: document.getElementById('touch-right'),
-      btnGas: document.getElementById('touch-gas'),
-      btnBrake: document.getElementById('touch-brake'),
-      btnNitro: document.getElementById('touch-nitro'),
-      btnHandbrake: document.getElementById('touch-handbrake')
+  // Proper Pause Menu Modal Buttons (Resume, Restart, Back to Menu)
+  const btnPauseResume = document.getElementById('btn-pause-resume');
+  if (btnPauseResume) {
+    btnPauseResume.addEventListener('click', () => {
+      raceScene.resumeGame();
     });
+  }
 
-    // Camera switch callback
-    input.onCameraSwitch = () => {
-      const newMode = this.raceEngine.cameraFollow.cycleMode();
-      storage.saveSettings({ cameraDistance: newMode });
-      this.ui.refreshSettingsUI();
+  const btnPauseRestart = document.getElementById('btn-pause-restart');
+  if (btnPauseRestart) {
+    btnPauseRestart.addEventListener('click', () => {
+      raceScene.restartGame();
+    });
+  }
+
+  const btnPauseMenu = document.getElementById('btn-pause-menu');
+  if (btnPauseMenu) {
+    btnPauseMenu.addEventListener('click', returnToMenu);
+  }
+
+  // 1 KM Pitstop Service Buttons (Refuel $100 & Buy Nitro $300)
+  const btnServiceRefuel = document.getElementById('btn-service-refuel');
+  if (btnServiceRefuel) {
+    btnServiceRefuel.addEventListener('click', () => {
+      raceScene.refuelVehicle();
+    });
+  }
+
+  const btnServiceNitro = document.getElementById('btn-service-nitro');
+  if (btnServiceNitro) {
+    btnServiceNitro.addEventListener('click', () => {
+      raceScene.buyNitro();
+    });
+  }
+
+  // Retry / Play Again Button (Traffic Racer Game Over)
+  const btnRetry = document.getElementById('btn-tr-retry');
+  if (btnRetry) {
+    btnRetry.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚡ Retrying Traffic Racer Highway Journey...');
+      const goModal = document.getElementById('hud-gameover-banner');
+      if (goModal) goModal.style.display = 'none';
+      currentActiveScene = 'race';
+      uiContainer.style.display = 'none';
+      if (racingHud) racingHud.style.display = 'flex';
+      const stage = uiManager.storage.career.selectedStage || 1;
+      raceScene.startRace(stage);
+    });
+  }
+
+  // Garage Continue Button
+  const btnVictory = document.getElementById('btn-victory-continue');
+  if (btnVictory) {
+    btnVictory.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚡ Returning to Garage...');
+      currentActiveScene = 'menu';
+      raceScene.stopRace();
+      const goModal = document.getElementById('hud-gameover-banner');
+      if (goModal) goModal.style.display = 'none';
+      if (racingHud) racingHud.style.display = 'none';
+      uiContainer.style.display = 'flex';
+      uiManager.showScreen('screen-garage');
+    });
+  }
+
+  // Grand Victory Modal Buttons (50 KM Finish Garage)
+  const btnVicExit = document.getElementById('btn-vic-exit');
+  if (btnVicExit) {
+    btnVicExit.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚡ Returning to Menu from 50 KM Victory...');
+      const vicModal = document.getElementById('hud-victory-banner');
+      if (vicModal) vicModal.style.display = 'none';
+      returnToMenu();
+    });
+  }
+
+  const btnVicPlayAgain = document.getElementById('btn-vic-play-again');
+  if (btnVicPlayAgain) {
+    btnVicPlayAgain.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('⚡ Launching Journey Again from 0 KM...');
+      const vicModal = document.getElementById('hud-victory-banner');
+      if (vicModal) vicModal.style.display = 'none';
+      currentActiveScene = 'race';
+      uiContainer.style.display = 'none';
+      if (racingHud) racingHud.style.display = 'flex';
+      raceScene.startRace(1);
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (currentActiveScene === 'race') {
+      if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (raceScene.isPaused) {
+          raceScene.resumeGame();
+        } else {
+          raceScene.pauseGame();
+        }
+      } else if (e.code === 'KeyE') {
+        raceScene.refuelVehicle();
+      } else if (e.code === 'KeyB') {
+        raceScene.buyNitro();
+      }
+    }
+  });
+
+  // Handle window resizing
+  window.addEventListener('resize', () => {
+    resizeRenderer();
+  });
+
+  // 4. Unified Animation Loop
+  let lastTime = performance.now();
+
+  function animate(currentTime) {
+    requestAnimationFrame(animate);
+
+    const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+    lastTime = currentTime;
+
+    if (currentActiveScene === 'race') {
+      raceScene.update(deltaTime);
+      raceScene.render(renderer);
+    } else {
+      menuScene.update(deltaTime);
+      menuScene.render(renderer);
+    }
+  }
+
+  requestAnimationFrame(animate);
+  console.log('⚡ SPEED ORDER — Ready & Armed!');
+
+  // Developer / Automation URL Parameter Hook (for taking rich marketing screenshots)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const stage = params.get('stage');
+    const dist = params.get('dist');
+    const car = params.get('car');
+
+    if (car && typeof uiManager.storage.equipCar === 'function') {
+      uiManager.storage.equipCar(car);
+    }
+
+    if (view === 'garage') {
+      uiManager.showScreen('screen-garage');
+    } else if (view === 'play' || view === 'roadmap') {
+      uiManager.showScreen('screen-play');
+    } else if (view === 'race') {
+      const startStage = stage ? parseInt(stage, 10) : 1;
+      launchJourney(startStage);
+      if (dist) {
+        const distM = parseFloat(dist) * 1000;
+        raceScene.physics.z = distM;
+        raceScene.physics.distance = distM;
+        raceScene.physics.speed = 185;
+      }
+    } else if (view === 'victory') {
+      launchJourney(10);
+      raceScene.physics.z = 50005;
+      raceScene.physics.distance = 50005;
+      raceScene.refuelCount = 4;
+      raceScene.nitroUsedCount = 5;
+      raceScene.physics.closeOvertakes = 28;
+      raceScene.raceElapsedTime = 724;
+      raceScene.runCashEarned = 1860;
+      setTimeout(() => {
+        raceScene.onVictoryFinish();
+      }, 300);
+    }
+
+    // Auto-capture screenshot to screenshots folder via /api/save-screenshot
+    window.captureScreenshotToFile = async (filename) => {
+      try {
+        const imageBase64 = canvas.toDataURL('image/png');
+        const res = await fetch('/api/save-screenshot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, imageBase64 })
+        });
+        const result = await res.json();
+        console.log('Capture result:', result);
+        return result;
+      } catch (err) {
+        console.warn('Screenshot upload failed:', err);
+      }
     };
 
-    // 4. Bind Events & Interactions
-    this.bindWindowEvents();
-    this.bindGarageInteractions();
+    // Floating Quick Screenshot Button & F9 key for Advertisement Content Creators
+    const btnQuickShot = document.getElementById('btn-quick-screenshot');
+    const doQuickScreenshot = async () => {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `ad_screenshot_${timestamp}.png`;
+      console.log(`📸 Taking screenshot: ${filename}`);
 
-    // 5. Initial State: Load track and showcase car
-    const initialTrack = storage.progress.selectedTrack || 'goa_marine';
-    const initialCar = storage.progress.selectedCar || 'nissan_skyline';
+      // 1. Post to Vite server /api/save-screenshot to save in screenshots/ folder
+      if (typeof window.captureScreenshotToFile === 'function') {
+        await window.captureScreenshotToFile(filename);
+      }
 
-    // If previously saved car was not in new catalog, set to default
-    if (!CARS.find(c => c.id === initialCar)) {
-      storage.saveProgress({ selectedCar: 'nissan_skyline', unlockedCars: ['nissan_skyline', 'toyota_supra'] });
-    }
+      // 2. Also trigger direct browser download so user immediately gets the file
+      try {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.warn('Browser direct download fallback:', err);
+      }
 
-    this.trackManager.loadTrack(initialTrack, quality);
-    this.showcaseGarageCar(storage.progress.selectedCar || 'nissan_skyline');
-
-    // Start background audio on first user gesture
-    const startAudioOnGesture = () => {
-      audio.init();
-      audio.startBGM();
-      window.removeEventListener('pointerdown', startAudioOnGesture);
-      window.removeEventListener('keydown', startAudioOnGesture);
+      if (raceScene && typeof raceScene.showCallout === 'function') {
+        raceScene.showCallout(`📸 AD SCREENSHOT SAVED TO /screenshots/${filename}`);
+      }
     };
-    window.addEventListener('pointerdown', startAudioOnGesture);
-    window.addEventListener('keydown', startAudioOnGesture);
 
-    // 6. Begin Game Render Loop
-    this.animate();
-  }
-
-  bindWindowEvents() {
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      this.camera.aspect = w / h;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(w, h);
-      const quality = storage.settings.graphicsQuality || 'high';
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 2 : 1) * (storage.settings.resolutionScale || 1.0));
-    });
-  }
-
-  onResolutionChange(scale) {
-    const quality = storage.settings.graphicsQuality || 'high';
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 2 : 1) * scale);
-  }
-
-  onQualityChange(q) {
-    this.renderer.shadowMap.enabled = q !== 'low';
-    this.trackManager.loadTrack(storage.progress.selectedTrack || 'goa_marine', q);
-  }
-
-  onCameraModeChange(camMode) {
-    if (this.raceEngine) {
-      this.raceEngine.cameraFollow.setMode(camMode);
-    }
-  }
-
-  /* ---------------- GARAGE SHOWROOM ---------------- */
-  showcaseGarageCar(carId) {
-    if (this.garageVehicle) {
-      this.garageVehicle.dispose();
-      this.garageVehicle = null;
+    if (btnQuickShot) {
+      btnQuickShot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        doQuickScreenshot();
+      });
     }
 
-    this.garageVehicle = new Vehicle(this.scene, carId, false);
-    this.garageVehicle.respawn(new THREE.Vector3(0, 0, 0), 0);
-  }
-
-  onGarageCarChange(carId) {
-    this.showcaseGarageCar(carId);
-  }
-
-  onEnterGarage(carId) {
-    this.showcaseGarageCar(carId);
-    this.camera.position.set(0, 2.2, 5.8);
-    this.camera.lookAt(0, 0.8, 0);
-  }
-
-  onEnterMainMenu() {
-    this.camera.position.set(0, 8, 25);
-    this.camera.lookAt(0, 2, 0);
-  }
-
-  bindGarageInteractions() {
-    this.container.addEventListener('pointerdown', (e) => {
-      if (this.ui.currentScreenId === 'screen-garage') {
-        this.isDraggingGarage = true;
-        this.garageDragStartX = e.clientX;
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F9' || e.code === 'F9') {
+        e.preventDefault();
+        doQuickScreenshot();
       }
     });
 
-    window.addEventListener('pointermove', (e) => {
-      if (this.isDraggingGarage && this.garageVehicle) {
-        const deltaX = e.clientX - this.garageDragStartX;
-        this.garageDragStartX = e.clientX;
-        this.garageVehicle.heading += deltaX * 0.01;
-        this.garageVehicle.group.rotation.y = this.garageVehicle.heading;
-      }
-    });
-
-    window.addEventListener('pointerup', () => {
-      this.isDraggingGarage = false;
-    });
+    const autoShot = params.get('autoshot');
+    if (autoShot) {
+      setTimeout(async () => {
+        await window.captureScreenshotToFile(autoShot);
+      }, 1800);
+    }
+  } catch (e) {
+    console.warn('URL param hook notice:', e);
   }
-
-  /* ---------------- SINGLE PLAYER RACE ---------------- */
-  startSinglePlayerRace(config) {
-    audio.stopBGM();
-    if (this.garageVehicle) {
-      this.garageVehicle.dispose();
-      this.garageVehicle = null;
-    }
-    this.raceEngine.startRace(config);
-  }
-
-  restartRace() {
-    if (this.raceEngine.raceConfig) {
-      this.raceEngine.startRace(this.raceEngine.raceConfig);
-    }
-  }
-
-  endRaceAndReturnToMenu() {
-    this.raceEngine.cleanup();
-    this.ui.showScreen('screen-main-menu');
-    this.showcaseGarageCar(storage.progress.selectedCar);
-    audio.startBGM();
-  }
-
-  /* ---------------- ANIMATION & RENDER LOOP ---------------- */
-  animate() {
-    requestAnimationFrame(() => this.animate());
-
-    const now = performance.now();
-    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
-    this.lastTime = now;
-
-    // FPS Counter
-    this.frameCount++;
-    if (now - this.lastFpsUpdate >= 500) {
-      const fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsUpdate));
-      if (this.ui.fpsCounter) this.ui.fpsCounter.textContent = `${fps} FPS`;
-      this.frameCount = 0;
-      this.lastFpsUpdate = now;
-    }
-
-    if (this.isPaused) return;
-
-    // 1. Race Active
-    if (this.raceEngine.isActive) {
-      this.raceEngine.update(dt);
-    }
-    // 2. Garage Showroom
-    else if (this.ui.currentScreenId === 'screen-garage') {
-      if (this.garageVehicle && !this.isDraggingGarage) {
-        this.garageVehicle.heading += 0.4 * dt;
-        this.garageVehicle.group.rotation.y = this.garageVehicle.heading;
-      }
-    }
-    // 3. Main Menu Orbit
-    else if (this.ui.currentScreenId === 'screen-main-menu') {
-      this.menuAngle += 0.2 * dt;
-      const camX = Math.sin(this.menuAngle) * 24;
-      const camZ = Math.cos(this.menuAngle) * 24;
-      this.camera.position.set(camX, 7 + Math.sin(this.menuAngle * 0.5) * 2, camZ);
-      this.camera.lookAt(0, 1.5, 0);
-
-      if (this.garageVehicle) {
-        this.garageVehicle.heading += 0.3 * dt;
-        this.garageVehicle.group.rotation.y = this.garageVehicle.heading;
-      }
-    }
-
-    // Render Scene
-    this.renderer.render(this.scene, this.camera);
-  }
-}
-
-// Immediate execution resilient to document loading state
-function bootApp() {
-  new GameApp();
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootApp);
+  document.addEventListener('DOMContentLoaded', boot);
 } else {
-  bootApp();
+  boot();
 }

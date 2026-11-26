@@ -1,5 +1,5 @@
 {
-  "name": "world-racing-championship",
+  "name": "speed-order",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,8 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.165.0",
-    "firebase": "^10.12.2"
+    "three": "^0.165.0"
   },
   "devDependencies": {
     "vite": "^5.3.1"

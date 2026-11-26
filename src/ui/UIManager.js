@@ -1,546 +1,405 @@
-/**
- * UIManager.js - NFS Style UI, Tachometer Needle Animation,
- * Drift Points Display, Underglow Customizer, and Instant Screen Transitions.
- */
-
 import { storage } from '../core/Storage.js';
 import { audio } from '../core/Audio.js';
-import { CARS, getCarById } from '../game/CarCatalog.js';
-import { getTrackById } from '../tracks/TrackData.js';
+import { VEHICLES_CATALOG, WHEEL_TYPES } from '../racing/CarModel.js';
 
+/**
+ * UIManager - Screen navigation, settings inputs, 40+ garage slider, wheel customizer, game modes, and 7 maps.
+ */
 export class UIManager {
-  constructor(gameApp) {
-    this.app = gameApp;
-    this.currentScreenId = 'screen-main-menu';
-    this.garageCarIndex = 0;
-    this.currentDifficulty = storage.progress.difficulty || 'medium';
-    this.currentLaps = 3;
-    this.currentOpponents = 5;
+  constructor(menuScene, renderer) {
+    this.menuScene = menuScene;
+    this.renderer = renderer;
+    this.audio = audio;
+    this.storage = storage;
+    this.currentCarIndex = 0;
 
-    this.initDOMElements();
-    this.bindEvents();
-    this.refreshSettingsUI();
-    this.refreshGarageUI();
+    this.init();
   }
 
-  initDOMElements() {
-    this.screens = document.querySelectorAll('.nfs-screen');
-    this.hud = document.getElementById('racing-hud');
-    this.pauseModal = document.getElementById('pause-modal');
-    this.nosOverlay = document.getElementById('nos-motion-overlay');
-
-    // Status bar
-    this.btnSound = document.getElementById('btn-sound-toggle');
-    this.btnFullscreen = document.getElementById('btn-fullscreen-toggle');
-    this.fpsCounter = document.getElementById('fps-counter');
-
-    // Main Menu Quick Play
-    this.btnQuickPlay = document.getElementById('btn-quick-play');
-
-    // Garage elements
-    this.garageCarTier = document.getElementById('garage-car-tier');
-    this.garageCarStatus = document.getElementById('garage-car-status');
-    this.garageCarName = document.getElementById('garage-car-name');
-    this.garageCarDesc = document.getElementById('garage-car-desc');
-    this.garageUnlockBox = document.getElementById('garage-unlock-box');
-    this.btnSelectCar = document.getElementById('btn-select-car');
-
-    this.specPower = document.getElementById('spec-power');
-    this.specEngine = document.getElementById('spec-engine');
-    this.specDrive = document.getElementById('spec-drive');
-
-    this.statValSpeed = document.getElementById('stat-val-speed');
-    this.barSpeed = document.getElementById('bar-speed');
-    this.statValAccel = document.getElementById('stat-val-accel');
-    this.barAccel = document.getElementById('bar-accel');
-    this.statValHandling = document.getElementById('stat-val-handling');
-    this.barHandling = document.getElementById('bar-handling');
-    this.statValNitro = document.getElementById('stat-val-nitro');
-    this.barNitro = document.getElementById('bar-nitro');
-
-    // Track Select & Setup
-    this.btnLaunchRace = document.getElementById('btn-launch-race');
-    this.diffButtons = document.querySelectorAll('#difficulty-selector .nfs-pill');
-    this.lapsButtons = document.querySelectorAll('#laps-selector .nfs-pill');
-
-    // Settings
-    this.inputMasterVol = document.getElementById('setting-master-vol');
-    this.inputMusicVol = document.getElementById('setting-music-vol');
-    this.inputSfxVol = document.getElementById('setting-sfx-vol');
-    this.lblMasterVol = document.getElementById('lbl-master-vol');
-    this.lblMusicVol = document.getElementById('lbl-music-vol');
-    this.lblSfxVol = document.getElementById('lbl-sfx-vol');
-    this.qualityButtons = document.querySelectorAll('#setting-quality-group .nfs-pill');
-    this.cameraButtons = document.querySelectorAll('#setting-camera-group .nfs-pill');
-
-    // Results screen
-    this.resultsBadge = document.getElementById('results-badge');
-    this.resultsHeadline = document.getElementById('results-headline');
-    this.resTotalTime = document.getElementById('res-total-time');
-    this.resBestLap = document.getElementById('res-best-lap');
-    this.resTopSpeed = document.getElementById('res-top-speed');
-    this.standingsTbody = document.getElementById('standings-tbody');
-    this.trackCallout = document.getElementById('results-track-callout');
-    this.trackCalloutTitle = document.getElementById('track-callout-title');
-    this.trackCalloutDesc = document.getElementById('track-callout-desc');
-
-    // HUD Tachometer & Speedometer
-    this.hudCountdown = document.getElementById('hud-countdown');
-    this.countdownNumber = document.getElementById('countdown-number');
-    this.hudPosMain = document.getElementById('hud-pos-main');
-    this.hudPosTotal = document.getElementById('hud-pos-total');
-    this.hudLapCur = document.getElementById('hud-lap-cur');
-    this.hudLapTotal = document.getElementById('hud-lap-total');
-    this.hudRaceTime = document.getElementById('hud-race-time');
-    this.hudBestLap = document.getElementById('hud-best-lap');
-    this.hudSpeed = document.getElementById('hud-speed');
-    this.hudGear = document.getElementById('hud-gear');
-    this.hudNitroBar = document.getElementById('hud-nitro-bar');
-    this.tachoNeedle = document.getElementById('tacho-needle');
-    this.driftScoreBox = document.getElementById('drift-score-box');
-    this.driftPts = document.getElementById('drift-pts');
+  init() {
+    this.bindNavButtons();
+    this.bindBackButtons();
+    this.bindGameModes();
+    this.bindMapSelection();
+    this.bindGarageSlider();
+    this.bindGarageSwatches();
+    this.bindWheelCustomizer();
+    this.bindSettings();
+    this.bindAudioToggle();
+    this.loadStats();
   }
 
-  bindEvents() {
-    // 1. QUICK PLAY BUTTON: Instant launch!
-    if (this.btnQuickPlay) {
-      this.btnQuickPlay.addEventListener('click', () => {
-        audio.playClick();
-        const selectedTrack = storage.progress.selectedTrack || 'goa_marine';
-        const selectedCar = storage.progress.selectedCar || 'nissan_skyline';
-        this.app.startSinglePlayerRace({
-          trackId: selectedTrack,
-          carId: selectedCar,
-          difficulty: this.currentDifficulty,
-          laps: this.currentLaps,
-          opponents: 5
-        });
-      });
-    }
-
-    // 2. Navigation buttons
-    document.querySelectorAll('[data-target]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        audio.playClick();
-        const targetId = btn.getAttribute('data-target');
-        this.showScreen(targetId);
-      });
-    });
-
-    // Sound toggle
-    this.btnSound.addEventListener('click', () => {
-      const isMuted = storage.settings.masterVolume === 0;
-      const newVol = isMuted ? 0.8 : 0;
-      storage.saveSettings({ masterVolume: newVol });
-      audio.updateVolumes();
-      this.btnSound.textContent = newVol > 0 ? '🔊' : '🔇';
-      this.refreshSettingsUI();
-    });
-
-    // Fullscreen toggle
-    this.btnFullscreen.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        document.exitFullscreen().catch(() => {});
-      }
-    });
-
-    // Garage Next / Prev
-    document.getElementById('btn-prev-car').addEventListener('click', () => {
-      audio.playClick();
-      this.garageCarIndex = (this.garageCarIndex - 1 + CARS.length) % CARS.length;
-      this.refreshGarageUI();
-      if (this.app.onGarageCarChange) {
-        this.app.onGarageCarChange(CARS[this.garageCarIndex].id);
-      }
-    });
-
-    document.getElementById('btn-next-car').addEventListener('click', () => {
-      audio.playClick();
-      this.garageCarIndex = (this.garageCarIndex + 1) % CARS.length;
-      this.refreshGarageUI();
-      if (this.app.onGarageCarChange) {
-        this.app.onGarageCarChange(CARS[this.garageCarIndex].id);
-      }
-    });
-
-    // Garage Underglow Color Picker
-    document.querySelectorAll('.neon-dot').forEach(dot => {
-      dot.addEventListener('click', () => {
-        audio.playClick();
-        document.querySelectorAll('.neon-dot').forEach(d => d.classList.remove('active'));
-        dot.classList.add('active');
-        const color = dot.getAttribute('data-neon');
-        if (this.app.garageVehicle) {
-          this.app.garageVehicle.setUnderglowColor(color);
-        }
-      });
-    });
-
-    // Select car button
-    this.btnSelectCar.addEventListener('click', () => {
-      const car = CARS[this.garageCarIndex];
-      if (storage.isCarUnlocked(car.id)) {
-        audio.playClick();
-        storage.setSelectedCar(car.id);
-        this.refreshGarageUI();
-      }
-    });
-
-    // Difficulty selector
-    this.diffButtons.forEach(btn => {
+  bindNavButtons() {
+    const navButtons = document.querySelectorAll('.menu-btn[data-target]');
+    navButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        audio.playClick();
-        this.diffButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.currentDifficulty = btn.getAttribute('data-difficulty');
-        storage.saveProgress({ difficulty: this.currentDifficulty });
+        const target = btn.getAttribute('data-target');
+        this.audio.playClickSound();
+        this.showScreen(target);
       });
     });
+  }
 
-    // Laps selector
-    this.lapsButtons.forEach(btn => {
+  bindBackButtons() {
+    const backButtons = document.querySelectorAll('.back-btn[data-back]');
+    backButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        audio.playClick();
-        this.lapsButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.currentLaps = parseInt(btn.getAttribute('data-laps'), 10);
+        const target = btn.getAttribute('data-back');
+        this.audio.playBackSound();
+        this.showScreen(target);
       });
-    });
-
-    // Launch race from Track Selection
-    this.btnLaunchRace.addEventListener('click', () => {
-      const selectedTrack = storage.progress.selectedTrack || 'goa_marine';
-      if (!storage.isTrackUnlocked(selectedTrack)) {
-        alert('This circuit is locked! Win the previous street race to unlock.');
-        return;
-      }
-
-      audio.playClick();
-      this.app.startSinglePlayerRace({
-        trackId: selectedTrack,
-        carId: storage.progress.selectedCar || 'nissan_skyline',
-        difficulty: this.currentDifficulty,
-        laps: this.currentLaps,
-        opponents: this.currentOpponents
-      });
-    });
-
-    // Settings inputs
-    this.inputMasterVol.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.lblMasterVol.textContent = `${Math.round(val * 100)}%`;
-      storage.saveSettings({ masterVolume: val });
-      audio.updateVolumes();
-    });
-
-    this.inputMusicVol.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.lblMusicVol.textContent = `${Math.round(val * 100)}%`;
-      storage.saveSettings({ musicVolume: val });
-      audio.updateVolumes();
-    });
-
-    this.inputSfxVol.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      this.lblSfxVol.textContent = `${Math.round(val * 100)}%`;
-      storage.saveSettings({ sfxVolume: val });
-      audio.updateVolumes();
-    });
-
-    this.qualityButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        audio.playClick();
-        this.qualityButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const q = btn.getAttribute('data-quality');
-        storage.saveSettings({ graphicsQuality: q });
-        if (this.app.onQualityChange) this.app.onQualityChange(q);
-      });
-    });
-
-    this.cameraButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        audio.playClick();
-        this.cameraButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const c = btn.getAttribute('data-cam');
-        storage.saveSettings({ cameraDistance: c });
-        if (this.app.onCameraModeChange) this.app.onCameraModeChange(c);
-      });
-    });
-
-    // In-game Pause & Resume
-    document.getElementById('btn-pause-race').addEventListener('click', () => {
-      this.togglePause(true);
-    });
-    document.getElementById('btn-resume-race').addEventListener('click', () => {
-      this.togglePause(false);
-    });
-    document.getElementById('btn-restart-race').addEventListener('click', () => {
-      this.togglePause(false);
-      this.app.restartRace();
-    });
-    document.getElementById('btn-pause-settings').addEventListener('click', () => {
-      this.togglePause(false);
-      this.showScreen('screen-settings');
-    });
-    document.getElementById('btn-quit-race').addEventListener('click', () => {
-      this.togglePause(false);
-      this.app.endRaceAndReturnToMenu();
-    });
-
-    // Results Actions
-    document.getElementById('btn-replay-race').addEventListener('click', () => {
-      audio.playClick();
-      this.app.restartRace();
-    });
-    document.getElementById('btn-results-track').addEventListener('click', () => {
-      audio.playClick();
-      this.showScreen('screen-track-select');
-    });
-    document.getElementById('btn-results-garage').addEventListener('click', () => {
-      audio.playClick();
-      this.showScreen('screen-garage');
-    });
-    document.getElementById('btn-results-menu').addEventListener('click', () => {
-      audio.playClick();
-      this.showScreen('screen-main-menu');
     });
   }
 
   showScreen(screenId) {
-    this.currentScreenId = screenId;
-    this.screens.forEach(s => s.classList.remove('active'));
-    this.hud.classList.add('hidden');
-    this.pauseModal.classList.add('hidden');
+    const screens = document.querySelectorAll('.screen-view');
+    screens.forEach(s => s.classList.remove('active'));
 
     const target = document.getElementById(screenId);
     if (target) {
       target.classList.add('active');
-    }
 
-    if (screenId === 'screen-track-select') {
-      if (this.app.trackManager) {
-        this.app.trackManager.renderTrackSelectionCards();
-      }
-    } else if (screenId === 'screen-garage') {
-      const selId = storage.progress.selectedCar;
-      const idx = CARS.findIndex(c => c.id === selId);
-      if (idx !== -1) this.garageCarIndex = idx;
-      this.refreshGarageUI();
-      if (this.app.onEnterGarage) {
-        this.app.onEnterGarage(CARS[this.garageCarIndex].id);
-      }
-    } else if (screenId === 'screen-main-menu') {
-      if (this.app.onEnterMainMenu) {
-        this.app.onEnterMainMenu();
-      }
-    }
-  }
-
-  showHUD() {
-    this.screens.forEach(s => s.classList.remove('active'));
-    this.hud.classList.remove('hidden');
-  }
-
-  togglePause(show) {
-    if (show) {
-      this.pauseModal.classList.remove('hidden');
-      this.app.isPaused = true;
-      audio.stopEngine();
-    } else {
-      this.pauseModal.classList.add('hidden');
-      this.app.isPaused = false;
-      audio.startEngine();
-    }
-  }
-
-  refreshGarageUI() {
-    const car = CARS[this.garageCarIndex];
-    if (!car) return;
-
-    const isUnlocked = storage.isCarUnlocked(car.id);
-    const isSelected = storage.progress.selectedCar === car.id;
-
-    this.garageCarTier.textContent = car.tier.toUpperCase();
-    this.garageCarName.textContent = car.name.toUpperCase();
-    this.garageCarDesc.textContent = car.description;
-
-    this.specPower.textContent = car.specs.power;
-    this.specEngine.textContent = car.specs.engine;
-    this.specDrive.textContent = car.specs.drive;
-
-    this.statValSpeed.textContent = `${car.stats.topSpeed} KM/H`;
-    this.barSpeed.style.width = `${Math.min(100, (car.stats.topSpeed / 320) * 100)}%`;
-
-    this.statValAccel.textContent = `${car.stats.acceleration}`;
-    this.barAccel.style.width = `${Math.min(100, (car.stats.acceleration / 50) * 100)}%`;
-
-    this.statValHandling.textContent = `${car.stats.handling.toFixed(2)}`;
-    this.barHandling.style.width = `${Math.min(100, car.stats.handling * 100)}%`;
-
-    this.statValNitro.textContent = `${car.stats.nitroCapacity}`;
-    this.barNitro.style.width = `${Math.min(100, (car.stats.nitroCapacity / 160) * 100)}%`;
-
-    if (isUnlocked) {
-      this.garageCarStatus.textContent = 'UNLOCKED';
-      this.garageCarStatus.className = 'car-status-pill unlocked';
-      this.garageUnlockBox.classList.add('hidden');
-
-      if (isSelected) {
-        this.btnSelectCar.textContent = 'SELECTED (ACTIVE)';
-        this.btnSelectCar.className = 'nfs-btn-action';
-        this.btnSelectCar.disabled = true;
+      if (screenId === 'screen-garage') {
+        this.menuScene.targetDistance = 5.2;
+        this.menuScene.orbitAngles.theta = 1.1;
+        this.menuScene.orbitAngles.phi = 0.38;
+        if (this.refreshGarageUI) {
+          const car = VEHICLES_CATALOG[this.currentCarIndex] || VEHICLES_CATALOG[0];
+          this.refreshGarageUI(car.id);
+        }
       } else {
-        this.btnSelectCar.textContent = 'SELECT THIS MACHINE';
-        this.btnSelectCar.className = 'nfs-btn-action primary';
-        this.btnSelectCar.disabled = false;
+        this.menuScene.targetDistance = 7.0;
       }
-    } else {
-      this.garageCarStatus.textContent = 'LOCKED';
-      this.garageCarStatus.className = 'car-status-pill locked';
-      this.garageUnlockBox.classList.remove('hidden');
-      this.garageUnlockBox.querySelector('span').textContent = car.unlockRequirement;
 
-      this.btnSelectCar.textContent = 'LOCKED MACHINE';
-      this.btnSelectCar.className = 'nfs-btn-action disabled';
-      this.btnSelectCar.disabled = true;
+      if (screenId === 'screen-play') {
+        this.refreshUnlockedMaps();
+        this.refreshGameModes();
+      }
+
+      if (screenId === 'screen-stats') {
+        this.loadStats();
+      }
     }
   }
 
-  refreshSettingsUI() {
-    const s = storage.settings;
-    this.inputMasterVol.value = s.masterVolume;
-    this.lblMasterVol.textContent = `${Math.round(s.masterVolume * 100)}%`;
-
-    this.inputMusicVol.value = s.musicVolume;
-    this.lblMusicVol.textContent = `${Math.round(s.musicVolume * 100)}%`;
-
-    this.inputSfxVol.value = s.sfxVolume;
-    this.lblSfxVol.textContent = `${Math.round(s.sfxVolume * 100)}%`;
-
-    this.qualityButtons.forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-quality') === s.graphicsQuality);
+  bindGameModes() {
+    const modeButtons = document.querySelectorAll('.mode-tab-btn[data-mode]');
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode');
+        this.storage.setGameMode(mode);
+        this.audio.playClickSound();
+        this.refreshGameModes();
+      });
     });
+    this.refreshGameModes();
+  }
 
-    this.cameraButtons.forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-cam') === s.cameraDistance);
+  refreshGameModes() {
+    const currentMode = this.storage.career.gameMode || 'endless';
+    const modeButtons = document.querySelectorAll('.mode-tab-btn[data-mode]');
+    modeButtons.forEach(btn => {
+      const mode = btn.getAttribute('data-mode');
+      if (mode === currentMode) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
     });
   }
 
-  showResults({ playerWon, playerPos, totalRacers, raceTime, bestLap, topSpeed, streakResult, standings }) {
-    this.showScreen('screen-results');
-
-    if (playerWon) {
-      audio.playVictory();
-      this.resultsBadge.className = 'podium-badge victory';
-      this.resultsBadge.textContent = '1ST PLACE — VICTORY!';
-      this.resultsHeadline.textContent = 'STREET KING OF THE NIGHT';
-    } else {
-      audio.playDefeat();
-      this.resultsBadge.className = 'podium-badge defeat';
-      this.resultsBadge.textContent = `${playerPos}TH PLACE — BUSTED`;
-      this.resultsHeadline.textContent = 'RACE FINISHED';
+  bindMapSelection() {
+    const startBtn = document.getElementById('btn-start-race');
+    if (startBtn) {
+      startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.audio.playClickSound();
+        if (this.onLaunchJourney) {
+          this.onLaunchJourney(1);
+        }
+      });
     }
+  }
 
-    const formatTime = (sec) => {
-      if (!sec || isNaN(sec)) return '--:--.--';
-      const m = Math.floor(sec / 60);
-      const remSec = (sec % 60).toFixed(2);
-      return `${m < 10 ? '0' : ''}${m}:${remSec < 10 ? '0' : ''}${remSec}`;
+  refreshUnlockedMaps() {
+    const playerCash = this.storage.stats.cash || 0;
+    const mapCashEl = document.getElementById('map-player-cash');
+    if (mapCashEl) mapCashEl.textContent = `$${playerCash.toLocaleString()}`;
+    this.loadStats();
+  }
+
+  bindGarageSlider() {
+    // Determine initial index
+    const equipped = this.storage.career.equippedCar || 'car_01';
+    const foundIdx = VEHICLES_CATALOG.findIndex(c => c.id === equipped);
+    this.currentCarIndex = foundIdx >= 0 ? foundIdx : 0;
+
+    const btnPrev = document.getElementById('btn-garage-prev');
+    const btnNext = document.getElementById('btn-garage-next');
+    const sliderInput = document.getElementById('garage-car-slider');
+
+    const updateGarageUI = (carKey) => {
+      const playerCash = this.storage.stats.cash;
+      const garageCashEl = document.getElementById('garage-player-cash');
+      if (garageCashEl) garageCashEl.textContent = `$${playerCash.toLocaleString()}`;
+      this.loadStats();
+
+      const car = VEHICLES_CATALOG.find(c => c.id === carKey) || VEHICLES_CATALOG[this.currentCarIndex];
+      const isCarUnlocked = this.storage.isCarUnlocked(car.id);
+      const isEquipped = (this.storage.career.equippedCar === car.id);
+
+      // Counter Badge
+      const counterEl = document.getElementById('garage-car-counter');
+      if (counterEl) {
+        counterEl.textContent = `CAR [ ${this.currentCarIndex + 1} / ${VEHICLES_CATALOG.length} ]`;
+      }
+      if (sliderInput) {
+        sliderInput.value = this.currentCarIndex;
+      }
+
+      // Name & Class
+      const nameEl = document.getElementById('garage-car-name');
+      const classEl = document.getElementById('garage-car-class');
+      if (nameEl) nameEl.textContent = car.name;
+      if (classEl) classEl.textContent = car.class;
+
+      // Stats
+      const speedBar = document.getElementById('stat-bar-speed');
+      const speedVal = document.getElementById('stat-val-speed');
+      if (speedBar) speedBar.style.width = `${Math.min(100, Math.round((car.speed / 390) * 100))}%`;
+      if (speedVal) speedVal.textContent = `${car.speed} KM/H`;
+
+      const accelBar = document.getElementById('stat-bar-accel');
+      const accelVal = document.getElementById('stat-val-accel');
+      if (accelBar) accelBar.style.width = car.accel === '1.7s' ? '100%' : `${Math.round(85 - parseFloat(car.accel) * 6)}%`;
+      if (accelVal) accelVal.textContent = car.accel;
+
+      const handlBar = document.getElementById('stat-bar-handling');
+      const handlVal = document.getElementById('stat-val-handling');
+      if (handlBar) handlBar.style.width = car.handling;
+      if (handlVal) handlVal.textContent = car.handling;
+
+      const armorBar = document.getElementById('stat-bar-armor');
+      const armorVal = document.getElementById('stat-val-armor');
+      if (armorBar) armorBar.style.width = car.armor;
+      if (armorVal) armorVal.textContent = car.armor;
+
+      // Price Badge & Action Button
+      const priceBadge = document.getElementById('garage-car-price-badge');
+      const btnEquip = document.getElementById('btn-equip-car');
+
+      if (isCarUnlocked) {
+        if (priceBadge) {
+          priceBadge.textContent = isEquipped ? '✓ CURRENTLY EQUIPPED' : '✓ VEHICLE OWNED & READY';
+          priceBadge.className = 'spec-price-status';
+        }
+        if (btnEquip) {
+          btnEquip.classList.remove('btn-buy-mode');
+          btnEquip.querySelector('span').textContent = isEquipped ? '✓ EQUIPPED FOR JOURNEY' : 'EQUIP FOR JOURNEY';
+        }
+      } else {
+        if (priceBadge) {
+          priceBadge.textContent = `🔒 LOCKED • PRICE: $${car.price.toLocaleString()}`;
+          priceBadge.className = 'spec-price-status locked';
+        }
+        if (btnEquip) {
+          btnEquip.classList.add('btn-buy-mode');
+          btnEquip.querySelector('span').textContent = `BUY VEHICLE • $${car.price.toLocaleString()}`;
+        }
+      }
+
+      // Update 3D garage preview
+      if (this.menuScene) {
+        const paintColor = this.storage.career.paintColor || car.defaultColor;
+        const wheelType = this.storage.career.wheelType || 'sport_5spoke';
+        this.menuScene.loadCarModel(car.id, paintColor, wheelType);
+      }
     };
 
-    this.resTotalTime.textContent = formatTime(raceTime);
-    this.resBestLap.textContent = formatTime(bestLap);
-    this.resTopSpeed.textContent = `${Math.round(topSpeed)} KM/H`;
+    this.refreshGarageUI = updateGarageUI;
 
-    if (streakResult && streakResult.unlockedTrackId) {
-      const track = getTrackById(streakResult.unlockedTrackId);
-      this.trackCallout.classList.remove('hidden');
-      this.trackCalloutTitle.textContent = `🏁 NEW STREET CIRCUIT UNLOCKED!`;
-      this.trackCalloutDesc = `${track.name} is now open for racing!`;
-    } else {
-      this.trackCallout.classList.add('hidden');
-    }
-
-    // Populate standings table
-    this.standingsTbody.innerHTML = '';
-    standings.forEach(racer => {
-      const tr = document.createElement('tr');
-      if (racer.isPlayer) tr.classList.add('highlight');
-
-      const gapStr = racer.pos === 1 ? 'LEADER' : `+${(racer.gap || 0).toFixed(2)}s`;
-      tr.innerHTML = `
-        <td>#${racer.pos}</td>
-        <td>${racer.name} ${racer.isPlayer ? '(YOU)' : ''}</td>
-        <td>${racer.carName}</td>
-        <td>${formatTime(racer.totalTime)}</td>
-        <td>${gapStr}</td>
-      `;
-      this.standingsTbody.appendChild(tr);
-    });
-
-    if (this.app.trackManager) {
-      this.app.trackManager.renderTrackSelectionCards();
-    }
-  }
-
-  updateHUD({ speed, gear, nitroPercent, pos, totalRacers, lap, totalLaps, raceTime, bestLapTime, rpmRatio, isNitro, isDrifting, driftPoints }) {
-    this.hudSpeed.textContent = Math.round(speed);
-    this.hudGear.textContent = gear;
-    this.hudNitroBar.style.width = `${Math.max(0, Math.min(100, nitroPercent))}%`;
-    this.hudPosMain.textContent = pos;
-    this.hudPosTotal.textContent = `/${totalRacers}`;
-    this.hudLapCur.textContent = lap;
-    this.hudLapTotal.textContent = `/${totalLaps}`;
-
-    // Tachometer needle rotation: -120 deg (idle) to +120 deg (redline)
-    const needleDeg = -120 + ((rpmRatio || 0) * 240);
-    if (this.tachoNeedle) {
-      this.tachoNeedle.setAttribute('transform', `rotate(${needleDeg} 100 100)`);
-    }
-
-    // Drift Score display
-    if (this.driftScoreBox) {
-      if (isDrifting || (driftPoints && driftPoints > 0)) {
-        this.driftScoreBox.classList.remove('hidden');
-        this.driftPts.textContent = `+${Math.round(driftPoints)}`;
-      } else {
-        this.driftScoreBox.classList.add('hidden');
-      }
-    }
-
-    // NOS speed blur overlay
-    if (this.nosOverlay) {
-      if (isNitro) this.nosOverlay.classList.add('active');
-      else this.nosOverlay.classList.remove('active');
-    }
-
-    const format = (sec) => {
-      if (!sec) return '00:00.00';
-      const m = Math.floor(sec / 60);
-      const rem = (sec % 60).toFixed(2);
-      return `${m < 10 ? '0' : ''}${m}:${rem < 10 ? '0' : ''}${rem}`;
+    const navigateToCar = (newIdx) => {
+      this.currentCarIndex = (newIdx + VEHICLES_CATALOG.length) % VEHICLES_CATALOG.length;
+      const car = VEHICLES_CATALOG[this.currentCarIndex];
+      this.audio.playClickSound();
+      updateGarageUI(car.id);
     };
 
-    this.hudRaceTime.textContent = format(raceTime);
-    if (bestLapTime) {
-      this.hudBestLap.textContent = format(bestLapTime);
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => navigateToCar(this.currentCarIndex - 1));
+    }
+    if (btnNext) {
+      btnNext.addEventListener('click', () => navigateToCar(this.currentCarIndex + 1));
+    }
+    if (sliderInput) {
+      sliderInput.addEventListener('input', (e) => {
+        navigateToCar(Number(e.target.value));
+      });
+    }
+
+    // Equip / Buy Button
+    const btnEquip = document.getElementById('btn-equip-car');
+    if (btnEquip) {
+      btnEquip.addEventListener('click', () => {
+        const car = VEHICLES_CATALOG[this.currentCarIndex];
+        const isUnlocked = this.storage.isCarUnlocked(car.id);
+
+        if (isUnlocked) {
+          this.audio.playClickSound();
+          this.storage.equipCar(car.id);
+          btnEquip.querySelector('span').textContent = '✓ EQUIPPED! LAUNCHING JOURNEY...';
+
+          setTimeout(() => {
+            const startRaceBtn = document.getElementById('btn-start-race');
+            if (startRaceBtn) {
+              startRaceBtn.click();
+            } else {
+              this.showScreen('screen-play');
+            }
+            updateGarageUI(car.id);
+          }, 350);
+        } else {
+          // Attempt purchase
+          const currentCash = this.storage.stats.cash;
+          if (currentCash >= car.price) {
+            const success = this.storage.unlockCar(car.id, car.price);
+            if (success) {
+              this.audio.playClickSound();
+              updateGarageUI(car.id);
+              btnEquip.querySelector('span').textContent = '✓ PURCHASED & EQUIPPED! LAUNCHING...';
+
+              setTimeout(() => {
+                const startRaceBtn = document.getElementById('btn-start-race');
+                if (startRaceBtn) {
+                  startRaceBtn.click();
+                } else {
+                  this.showScreen('screen-play');
+                }
+                updateGarageUI(car.id);
+              }, 450);
+            }
+          } else {
+            const diff = car.price - currentCash;
+            btnEquip.querySelector('span').textContent = `NEED $${diff.toLocaleString()} MORE!`;
+            this.audio.playCrashSound();
+            setTimeout(() => {
+              if (btnEquip && !this.storage.isCarUnlocked(car.id)) {
+                btnEquip.querySelector('span').textContent = `BUY VEHICLE • $${car.price.toLocaleString()}`;
+              }
+            }, 1400);
+          }
+        }
+      });
+    }
+
+    // Initial load
+    updateGarageUI(VEHICLES_CATALOG[this.currentCarIndex].id);
+  }
+
+  bindWheelCustomizer() {
+    const rimButtons = document.querySelectorAll('.rim-btn[data-rim]');
+    const currentRim = this.storage.career.wheelType || 'sport_5spoke';
+
+    rimButtons.forEach(btn => {
+      const rimKey = btn.getAttribute('data-rim');
+      if (rimKey === currentRim) btn.classList.add('active');
+      else btn.classList.remove('active');
+
+      btn.addEventListener('click', () => {
+        rimButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.storage.setWheelType(rimKey);
+        this.audio.playClickSound();
+        if (this.menuScene) {
+          this.menuScene.setCarWheelType(rimKey);
+        }
+      });
+    });
+  }
+
+  bindGarageSwatches() {
+    const swatches = document.querySelectorAll('.swatches .swatch');
+    swatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        swatches.forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const hex = parseInt(swatch.getAttribute('data-color'), 16);
+        this.storage.setPaintColor(hex);
+        this.audio.playClickSound();
+        if (this.menuScene) {
+          this.menuScene.setCarPaintColor(hex);
+        }
+      });
+    });
+  }
+
+  bindSettings() {
+    const masterSlider = document.getElementById('setting-master-volume');
+    const masterVal = document.getElementById('val-master-volume');
+    if (masterSlider) {
+      masterSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (masterVal) masterVal.textContent = `${val}%`;
+        this.storage.updateSetting('masterVolume', val);
+        this.audio.setMasterVolume(val);
+      });
+    }
+
+    const musicSlider = document.getElementById('setting-music-volume');
+    const musicVal = document.getElementById('val-music-volume');
+    if (musicSlider) {
+      musicSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (musicVal) musicVal.textContent = `${val}%`;
+        this.storage.updateSetting('musicVolume', val);
+        this.audio.setMusicVolume(val);
+      });
+    }
+
+    const sfxSlider = document.getElementById('setting-sfx-volume');
+    const sfxVal = document.getElementById('val-sfx-volume');
+    if (sfxSlider) {
+      sfxSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (sfxVal) sfxVal.textContent = `${val}%`;
+        this.storage.updateSetting('sfxVolume', val);
+        this.audio.setSfxVolume(val);
+        this.audio.playClickSound();
+      });
     }
   }
 
-  showCountdown(val) {
-    this.hudCountdown.classList.remove('hidden');
-    this.countdownNumber.textContent = val;
-    if (val === 'GO!') {
-      this.countdownNumber.style.color = '#39ff14';
-      setTimeout(() => {
-        this.hudCountdown.classList.add('hidden');
-        this.countdownNumber.style.color = '#fff';
-      }, 900);
+  bindAudioToggle() {
+    const toggleBtn = document.getElementById('audio-toggle-btn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const isMuted = this.audio.toggleAudio();
+        toggleBtn.querySelector('.icon').textContent = isMuted ? '🔇' : '🔊';
+        toggleBtn.querySelector('.label').textContent = isMuted ? 'AUDIO OFF' : 'AUDIO ON';
+      });
     }
+  }
+
+  loadStats() {
+    const s = this.storage.stats;
+    const repEl = document.getElementById('stat-rep');
+    const cashEl = document.getElementById('stat-cash');
+    if (repEl) repEl.textContent = `${(s.rep || 0).toLocaleString()} XP`;
+    if (cashEl) cashEl.textContent = `$${(s.cash || 0).toLocaleString()}`;
+
+    // Statistics Screen Tiles (Saved on Local Browser)
+    const racesEnteredEl = document.getElementById('stat-races-entered');
+    const racesWonEl = document.getElementById('stat-races-won');
+    const topSpeedEl = document.getElementById('stat-top-speed');
+    const totalDriftEl = document.getElementById('stat-total-drift');
+    const nitroUsedEl = document.getElementById('stat-nitro-used');
+    const careerCashEl = document.getElementById('stat-career-cash');
+
+    if (racesEnteredEl) racesEnteredEl.textContent = (s.racesEntered || 0).toLocaleString();
+    if (racesWonEl) racesWonEl.textContent = (s.racesWon || s.racesEntered || 0).toLocaleString();
+    if (topSpeedEl) topSpeedEl.innerHTML = `${Math.round(s.topSpeed || 0)} <small>KM/H</small>`;
+    if (totalDriftEl) totalDriftEl.innerHTML = `${((s.totalDistance || 0)).toFixed(1)} <small>KM</small>`;
+    if (nitroUsedEl) nitroUsedEl.innerHTML = `${(s.nitroUsed || 0).toLocaleString()} <small>SEC</small>`;
+    if (careerCashEl) careerCashEl.textContent = `$${(s.careerEarnings || s.cash || 0).toLocaleString()}`;
   }
 }

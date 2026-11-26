@@ -3,10 +3,15 @@
 </p>
 
 <p align="center">
+  <a href="https://speed-order.netlify.app" target="_blank"><img src="https://img.shields.io/badge/▶_LIVE_DEMO-speed--order.netlify.app-00f0ff?style=for-the-badge&logo=netlify&logoColor=white" alt="Live Demo"></a>
   <a href="https://github.com/RITAM-DAWN237/SPEED-ORDER"><img src="https://img.shields.io/badge/Three.js-WebGL_Arcade-38bdf8?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js"></a>
   <a href="https://github.com/RITAM-DAWN237/SPEED-ORDER"><img src="https://img.shields.io/badge/Vite-5.4-f59e0b?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
   <a href="https://github.com/RITAM-DAWN237/SPEED-ORDER"><img src="https://img.shields.io/badge/Vehicles-42_Unique_Cars-10b981?style=for-the-badge" alt="42 Cars"></a>
   <a href="https://github.com/RITAM-DAWN237/SPEED-ORDER"><img src="https://img.shields.io/badge/Journey-50_KM_Interstate-ec4899?style=for-the-badge" alt="50 KM Journey"></a>
+</p>
+
+<p align="center">
+  🎮 <strong>Play Online Now:</strong> <a href="https://speed-order.netlify.app" target="_blank"><strong>https://speed-order.netlify.app</strong></a>
 </p>
 
 ---
